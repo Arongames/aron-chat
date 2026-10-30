@@ -112,6 +112,8 @@ const DEFAULT_CONFIG = {
   update_manifest_url: 'https://api.github.com/repos/Arongames/aron-chat/releases/latest',
   // Акцентный цвет интерфейса
   theme_accent: 'mint',
+  // Язык интерфейса
+  ui_language: 'ru',
   viewers_twitch: true,
   viewers_youtube: true,
   viewers_tiktok: true,
@@ -342,6 +344,7 @@ function sanitize(config) {
   out.theme_accent = ['mint', 'violet', 'blue', 'pink', 'amber'].includes(out.theme_accent)
     ? out.theme_accent
     : 'mint';
+  out.ui_language = out.ui_language === 'en' ? 'en' : 'ru';
 
   out.twitch_access_token = String(out.twitch_access_token || '').trim();
   out.twitch_refresh_token = String(out.twitch_refresh_token || '').trim();

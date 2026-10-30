@@ -99,7 +99,7 @@ function showPage(name) {
   document.querySelectorAll('.rail-item').forEach((item) => {
     item.classList.toggle('active', item.dataset.page === name);
   });
-  $('pageTitle').textContent = PAGE_TITLES[name] || '';
+  $('pageTitle').textContent = window.i18nT ? window.i18nT(PAGE_TITLES[name] || '') : (PAGE_TITLES[name] || '');
   if (name === 'settings') showSettingsPanel(settingsPanel);
   updateLiveBadge();
 }
@@ -714,6 +714,8 @@ function applyConfigToUI() {
   $('showPlatformIcons').checked = c.show_platform_icons !== false;
   $('themeAccent').value = c.theme_accent || 'mint';
   document.body.dataset.theme = c.theme_accent || 'mint';
+  $('uiLanguage').value = c.ui_language || 'ru';
+  if (window.applyI18n) window.applyI18n(c.ui_language || 'ru');
   $('updateAutoCheck').checked = c.update_check_enabled !== false;
   $('updateManifestUrl').value = c.update_manifest_url || '';
   $('daEnabled').checked = c.donationalerts_enabled !== false;
@@ -947,6 +949,11 @@ $('themeAccent').addEventListener('change', () => {
   const value = $('themeAccent').value;
   document.body.dataset.theme = value;
   stage({ theme_accent: value }, true);
+});
+$('uiLanguage').addEventListener('change', () => {
+  const value = $('uiLanguage').value;
+  if (window.applyI18n) window.applyI18n(value);
+  stage({ ui_language: value }, true);
 });
 bindCheck('updateAutoCheck', 'update_check_enabled');
 bindCheck('daEnabled', 'donationalerts_enabled');
