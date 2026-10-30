@@ -185,6 +185,47 @@
     Object.entries(RU_TO_EN).map(([ru, en]) => [en, ru])
   );
 
+  // Динамические строки с параметрами: переводятся по шаблонам.
+  const DYNAMIC_EN = [
+    [/^Вход выполнен: (.+)$/, 'Signed in: $1'],
+    [/^Не отправлено: (.+)$/, 'Not sent: $1'],
+    [/^Настройки сохранены: (.+)$/, 'Settings saved: $1'],
+    [/^Ошибка сохранения: (.+)$/, 'Save error: $1'],
+    [/^Пользователь (.+) скрыт$/, 'User $1 hidden'],
+    [/^Не удалось скрыть: (.+)$/, 'Could not hide: $1'],
+    [/^Код (.+) — подтвердите на (.+)$/, 'Code $1 — confirm at $2'],
+    [/^(.+): (.+) подключён$/, '$1: $2 connected'],
+    [/^(.+): чат отключён$/, '$1: chat disconnected'],
+    [/^Скачивание… (\d+)% \((.+) МБ\)$/, 'Downloading… $1% ($2 MB)'],
+    [/^Скачивание… (.+) МБ$/, 'Downloading… $1 MB'],
+    [/^У вас последняя версия \((.+)\)$/, 'You are up to date ($1)'],
+    [/^Доступно обновление (.+)$/, 'Update available $1'],
+    [/^Проверка через (\d+) с \(попытка (\d+)\)$/, 'Checking in $1 s (attempt $2)'],
+    [/^Эфира нет\. Проверка через (\d+) с \(попытка (\d+)\)$/, 'No stream. Checking in $1 s (attempt $2)'],
+    [/^Подключаю…$/, 'Connecting…'],
+    [/^Озвучиваю…$/, 'Speaking…'],
+    [/^Озвучка выключена$/, 'Voice is off'],
+    [/^Настройки импортированы$/, 'Settings imported'],
+    [/^Изменения отменены$/, 'Changes discarded'],
+    [/^CSS чат-оверлея сохранён$/, 'Chat overlay CSS saved'],
+    [/^CSS виджета зрителей сохранён$/, 'Viewers widget CSS saved'],
+    [/^Сервер оверлеев перезапущен: (.+)$/, 'Overlay server restarted: $1'],
+    [/^Пресет «(.+)» применён$/, 'Preset "$1" applied'],
+    [/^Адрес (.+) скопирован$/, 'Address $1 copied'],
+    [/^Настройки экспортированы: (.+)$/, 'Settings exported: $1'],
+    [/^Экспорт не удался: (.+)$/, 'Export failed: $1'],
+    [/^Импорт не удался: (.+)$/, 'Import failed: $1'],
+    [/^Ошибка воспроизведения: (.+)$/, 'Playback error: $1'],
+    [/^Сообщение скопировано$/, 'Message copied'],
+  ];
+
+  function translateDynamicEn(value) {
+    for (const [re, replacement] of DYNAMIC_EN) {
+      if (re.test(value)) return value.replace(re, replacement);
+    }
+    return value;
+  }
+
   const ATTR_RU_TO_EN = {
     'Поиск по настройкам': 'Search settings',
     'Ник и Enter': 'Nick and Enter',
@@ -202,8 +243,9 @@
     const trail = value.match(/\s*$/)[0];
     const key = value.trim();
     if (!key) return value;
-    const translated = map[key];
-    return translated ? `${lead}${translated}${trail}` : value;
+    let translated = map[key] || key;
+    if (map === RU_TO_EN) translated = translateDynamicEn(translated);
+    return translated === key ? value : `${lead}${translated}${trail}`;
   }
 
   function applyI18n(lang) {
