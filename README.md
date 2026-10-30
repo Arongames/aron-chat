@@ -24,13 +24,9 @@ Windows 10/11 · Electron · офлайн-озвучка Piper · без тел�
 
 ## Скриншоты
 
-> Добавьте 2–3 скриншота в `docs/screenshots/` и вставьте сюда.
-
-```md
 ![Лента чата](docs/screenshots/chat.png)
-![Настройки](docs/screenshots/settings.png)
+![Настройки](docs/screenshots/setting.png)
 ![Оверлей](docs/screenshots/overlay.png)
-```
 
 ## Установка
 
