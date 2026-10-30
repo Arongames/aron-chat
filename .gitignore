@@ -27,3 +27,5 @@ _dbg*.js
 src/renderer/_probe.txt
 
 src/main/builtin.js
+
+e2e_*.txt

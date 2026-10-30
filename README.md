@@ -65,6 +65,25 @@ npm run build:setup       # dist-setup\Aron Chat Setup <версия>.exe
 npm run build:nsis        # запасной NSIS-установщик
 ```
 
+### Встроенные OAuth-ключи
+
+В репозитории **нет** `src/main/builtin.js` — файл с встроенными ключами
+исключён из git. Для локальной сборки со «встроенным» входом создайте его
+по шаблону `src/main/builtin.example.js`:
+
+```js
+module.exports = {
+  googleClientId: '…apps.googleusercontent.com',
+  googleClientSecret: 'GOCSPX-…',
+  twitchClientId: '…',
+};
+```
+
+Либо задайте переменные окружения `ARON_GOOGLE_CLIENT_ID`,
+`ARON_GOOGLE_CLIENT_SECRET`, `ARON_TWITCH_CLIENT_ID`.
+Без этого приложение работает, но OAuth-ключи нужно вводить вручную
+в «Доступ → Продвинутые настройки».
+
 ### Голоса Piper
 
 Голоса и `piper.exe` весят ~165 МБ и **не хранятся в репозитории**.
