@@ -602,7 +602,7 @@ class YouTubeChat extends EventEmitter {
       }
       let waitMs = 5000;
       try {
-        const data = await this.apiGet('liveChatMessages', {
+        const data = await this.apiGet('liveChat/messages', {
           liveChatId: this.liveChatId,
           part: 'snippet,authorDetails',
           pageToken: this.pageToken,
@@ -641,7 +641,7 @@ class YouTubeChat extends EventEmitter {
           waitMs = 2000;
           continue;
         }
-        this.noteApiError(err, 'liveChatMessages');
+        this.noteApiError(err, 'liveChat/messages');
         this.emit('log', `YouTube чат: ${err.message}${err.reason ? ` (${err.reason})` : ''}`);
         waitMs = this.quotaBlockedUntil > Date.now() ? QUOTA_BACKOFF / 5 : 10000;
       }
