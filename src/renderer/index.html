@@ -640,6 +640,16 @@
                       <input type="password" class="input" id="googleClientSecret" placeholder="GOCSPX-…" autocomplete="off" />
                     </div>
                     <p class="note">Свой клиент должен иметь тип «Desktop app» и включённый YouTube Data API v3.</p>
+
+                    <div class="field">
+                      <label for="daClientId">DonationAlerts Client ID</label>
+                      <input type="text" class="input" id="daClientId" placeholder="22509" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                      <label for="daClientSecret">DonationAlerts Client Secret</label>
+                      <input type="password" class="input" id="daClientSecret" placeholder="Ключ API приложения" autocomplete="off" />
+                    </div>
+                    <p class="note">Redirect URI приложения: <code>http://127.0.0.1:17342/da-callback</code>. Секрет хранится зашифрованным через DPAPI.</p>
                   </details>
                 </div>
 

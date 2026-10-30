@@ -11,6 +11,16 @@
     'Есть несохранённые изменения': 'Unsaved changes',
     'Все изменения сохранены': 'All changes saved',
     'API-ключ Speechify не задан — озвучка недоступна. Введите ключ на вкладке «Настройки».': 'Speechify API key is not set — voice is unavailable. Enter the key in Settings.',
+    'Сообщение отправлено': 'Message sent',
+    'Обновлений нет': 'No updates',
+    'Вы вышли из Google': 'Signed out of Google',
+    'Вы вышли из DonationAlerts': 'Signed out of DonationAlerts',
+    'DonationAlerts подключён': 'DonationAlerts connected',
+    'Скачивание…': 'Downloading…',
+    'Запускаю установщик…': 'Launching installer…',
+    'Проверяю…': 'Checking…',
+    'Откройте браузер и подтвердите доступ Google': 'Open the browser and confirm Google access',
+    'Откройте браузер и подтвердите доступ DonationAlerts': 'Open the browser and confirm DonationAlerts access',
     'Настройки': 'Settings',
     'ключ не задан': 'key not set',
     'Проверить озвучку': 'Test voice',
@@ -237,4 +247,51 @@
 
   window.applyI18n = applyI18n;
   window.i18nT = (ru) => (document.documentElement.lang === 'en' ? (RU_TO_EN[ru] || ru) : ru);
+
+  // Динамические элементы, добавленные после переключения языка:
+  // переводим точные совпадения из словаря (статусы, тосты, подписи).
+  let currentLang = 'ru';
+  const originalApply = applyI18n;
+  window.applyI18n = (lang) => {
+    currentLang = lang;
+    originalApply(lang);
+  };
+
+  const translateAdded = (root) => {
+    if (currentLang !== 'en' || !root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        const parent = node.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        if (/^(SCRIPT|STYLE|TEXTAREA|INPUT|CODE|PRE)$/.test(parent.tagName)) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        if (parent.closest('#chatLog, #eventsLog, .terms-box')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach((node) => {
+      node.nodeValue = translateValue(node.nodeValue, RU_TO_EN);
+    });
+  };
+
+  const observer = new MutationObserver((mutations) => {
+    if (currentLang !== 'en') return;
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          node.nodeValue = translateValue(node.nodeValue, RU_TO_EN);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          translateAdded(node);
+        }
+      });
+    }
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
 })();

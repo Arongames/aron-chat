@@ -668,6 +668,8 @@ function applyConfigToUI() {
   $('speechifyKey').value = c.speechify_key || '';
   $('googleClientId').value = c.google_client_id || '';
   $('googleClientSecret').value = c.google_client_secret || '';
+  $('daClientId').value = c.donationalerts_client_id || '';
+  $('daClientSecret').value = c.donationalerts_client_secret || '';
   $('ttsEngine').value = c.tts_engine || 'speechify';
   $('piperVoice').value = c.piper_voice || 'dmitri';
   $('ttsSpeed').value = c.tts_speed;
@@ -888,6 +890,8 @@ bindText('youtubeChannel', 'youtube_channel');
 bindText('youtubeApiKey', 'youtube_api_key');
 bindText('googleClientId', 'google_client_id');
 bindText('googleClientSecret', 'google_client_secret');
+bindText('daClientId', 'donationalerts_client_id');
+bindText('daClientSecret', 'donationalerts_client_secret');
 bindText('speechifyKey', 'speechify_key');
 bindText('voiceId', 'voice_id');
 
