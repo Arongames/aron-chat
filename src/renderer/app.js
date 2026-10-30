@@ -33,7 +33,9 @@ const PLATFORM_LOGOS = {
   tiktok: './tiktok-logo.svg',
   twitch: './twitch-logo.svg',
   youtube: './youtube-logo.svg',
+  donationalerts: './donation-logo.svg',
 };
+const PLATFORM_SHORT = { tiktok: 'tt', twitch: 'tw', youtube: 'yt', donationalerts: 'da' };
 
 const state = {
   config: null,
@@ -142,8 +144,6 @@ function initial(user) {
   const chars = Array.from(String(user || '?').trim());
   return (chars[0] || '?').toUpperCase();
 }
-
-const PLATFORM_SHORT = { tiktok: 'tt', twitch: 'tw', youtube: 'yt' };
 
 function makeRow(platform, extraClass = '') {
   const p = PLATFORM_SHORT[platform] || 'tt';
@@ -337,6 +337,7 @@ const EVENT_META = {
   gift: { cls: 'gift-ev', badge: 'gift', label: 'подарил подарок' },
   member: { cls: 'member-ev', badge: 'in', label: 'зашёл в эфир' },
   like: { cls: 'member-ev', badge: 'like', label: 'лайкнул' },
+  donation: { cls: 'gift-ev', badge: 'donation', label: 'донат' },
 };
 
 function addEvent(event) {
@@ -373,6 +374,9 @@ function addEvent(event) {
 
   if (event.type === 'gift') {
     text.textContent = `${meta.label} «${event.giftName || 'подарок'}» ×${event.count || 1}`;
+  } else if (event.type === 'donation') {
+    const amount = Number(event.amount || 0).toLocaleString('ru-RU');
+    text.textContent = `${amount} ${event.currency || 'RUB'}${event.message ? ` — ${event.message}` : ''}`;
   } else if (event.type === 'like') {
     text.textContent =
       `${meta.label} ×${event.count || 1} · всего ${Number(event.totalLikes || 0).toLocaleString('ru-RU')}`;
@@ -712,6 +716,8 @@ function applyConfigToUI() {
   document.body.dataset.theme = c.theme_accent || 'mint';
   $('updateAutoCheck').checked = c.update_check_enabled !== false;
   $('updateManifestUrl').value = c.update_manifest_url || '';
+  $('daEnabled').checked = c.donationalerts_enabled !== false;
+  $('speakDonations').checked = c.speak_donations !== false;
   applyChatAppearance();
 
   $('overlayViewersEnabled').checked = c.overlay_viewers_enabled !== false;
@@ -943,6 +949,8 @@ $('themeAccent').addEventListener('change', () => {
   stage({ theme_accent: value }, true);
 });
 bindCheck('updateAutoCheck', 'update_check_enabled');
+bindCheck('daEnabled', 'donationalerts_enabled');
+bindCheck('speakDonations', 'speak_donations');
 bindText('updateManifestUrl', 'update_manifest_url', (v) => v.trim());
 bindNumber('overlayViewersScale', 'overlay_viewers_scale', 60, 200);
 
@@ -1447,6 +1455,16 @@ function renderOAuth(oauth) {
   gg.classList.toggle('oauth-status-off', !g.loggedIn);
   $('btnGoogleLogin').disabled = !g.clientId || !g.hasSecret || !!g.loggedIn;
   $('btnGoogleLogout').disabled = !g.loggedIn;
+
+  const d = (oauth && oauth.donationAlerts) || {};
+  const ds = $('oauthDaStatus');
+  ds.textContent = d.loggedIn
+    ? 'Вход выполнен: донаты читаются'
+    : (d.clientId && d.hasSecret ? 'Вход не выполнен' : 'Не заданы ключи приложения DonationAlerts');
+  ds.classList.toggle('oauth-status-on', !!d.loggedIn);
+  ds.classList.toggle('oauth-status-off', !d.loggedIn);
+  $('btnDaLogin').disabled = !d.clientId || !d.hasSecret || !!d.loggedIn;
+  $('btnDaLogout').disabled = !d.loggedIn;
 }
 
 $('btnTwitchLogin').addEventListener('click', async () => {
@@ -1480,6 +1498,23 @@ $('btnGoogleLogout').addEventListener('click', async () => {
   const res = await ipcRenderer.invoke('oauth:google:logout');
   renderOAuth(res.oauth);
   toast('Вы вышли из Google');
+});
+
+$('btnDaLogin').addEventListener('click', async () => {
+  toast('Откройте браузер и подтвердите доступ DonationAlerts');
+  const res = await ipcRenderer.invoke('oauth:da:start');
+  if (!res.ok) {
+    toast(res.error, true);
+    return;
+  }
+  renderOAuth(res.oauth);
+  toast('DonationAlerts подключён');
+});
+
+$('btnDaLogout').addEventListener('click', async () => {
+  const res = await ipcRenderer.invoke('oauth:da:logout');
+  renderOAuth(res.oauth);
+  toast('Вы вышли из DonationAlerts');
 });
 
 ipcRenderer.on('oauth:update', (_e, oauth) => renderOAuth(oauth));

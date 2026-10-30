@@ -5,4 +5,6 @@ module.exports = {
   googleClientId: '',
   googleClientSecret: '',
   twitchClientId: '',
+  donationalertsClientId: '',
+  donationalertsClientSecret: '',
 };

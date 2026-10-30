@@ -175,6 +175,7 @@ const PLATFORM_LOGOS = {
   tiktok: '/tiktok-logo.svg',
   twitch: '/twitch-logo.svg',
   youtube: '/youtube-logo.svg',
+  donationalerts: '/donation-logo.svg',
 };
 
 // ---------- Сообщения чата ----------
@@ -211,6 +212,7 @@ const EVENT_LABELS = {
   gift: { badge: 'gift', verb: 'подарил подарок', cls: 'gift' },
   member: { badge: 'in', verb: 'зашёл в эфир', cls: 'follow' },
   like: { badge: 'like', verb: 'лайкнул', cls: 'like' },
+  donation: { badge: 'donation', verb: 'донат', cls: 'gift' },
 };
 
 function renderEvent(evt) {
@@ -245,6 +247,9 @@ function renderEvent(evt) {
 
   if (evt.type === 'gift') {
     text.textContent = `${meta.verb} «${evt.giftName || 'подарок'}» ×${evt.count || 1}`;
+  } else if (evt.type === 'donation') {
+    const amount = Number(evt.amount || 0).toLocaleString('ru-RU');
+    text.textContent = `${amount} ${evt.currency || 'RUB'}${evt.message ? ` — ${evt.message}` : ''}`;
   } else if (evt.type === 'like') {
     text.textContent = `${meta.verb} ×${evt.count || 1} · всего ${Number(evt.totalLikes || 0).toLocaleString('ru-RU')}`;
   } else {

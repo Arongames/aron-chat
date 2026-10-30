@@ -46,6 +46,7 @@ const ViewersTracker = require('./viewers');
 const TwitchAssets = require('./emotes');
 const twitchOAuth = require('./twitch_oauth');
 const googleOAuth = require('./google_oauth');
+const donationOAuth = require('./donationalerts_oauth');
 const createOverlayServer = require('./server');
 
 let mainWindow = null;
@@ -187,6 +188,12 @@ function oauthStatus() {
       hasSecret: !!config.google_client_secret,
       loggedIn: !!config.google_access_token,
     },
+    donationAlerts: {
+      clientId: config.donationalerts_client_id,
+      hasSecret: !!config.donationalerts_client_secret,
+      loggedIn: !!config.donationalerts_access_token,
+      enabled: config.donationalerts_enabled !== false,
+    },
     sendPlatform: config.send_platform,
   };
 }
@@ -256,6 +263,92 @@ async function ensureGoogleToken() {
     }
   }
   return token;
+}
+
+// ============================================================
+// DonationAlerts: OAuth и донаты
+// ============================================================
+let donationTimer = null;
+
+async function ensureDonationToken() {
+  let token = config.donationalerts_access_token;
+  if (!token) throw new Error('войдите через DonationAlerts на вкладке «Доступ»');
+
+  if (Date.now() > Number(config.donationalerts_token_expires_at) - 120000) {
+    if (!config.donationalerts_refresh_token) {
+      throw new Error('токен DonationAlerts истёк — войдите заново');
+    }
+    const fresh = await donationOAuth.refresh({
+      clientId: config.donationalerts_client_id,
+      clientSecret: config.donationalerts_client_secret,
+      refreshToken: config.donationalerts_refresh_token,
+    });
+    config = sanitize({
+      ...config,
+      donationalerts_access_token: fresh.accessToken,
+      donationalerts_refresh_token: fresh.refreshToken || config.donationalerts_refresh_token,
+      donationalerts_token_expires_at: Date.now() + fresh.expiresIn * 1000,
+    });
+    persistConfig();
+    notifyConfig();
+    token = fresh.accessToken;
+  }
+  return token;
+}
+
+async function pollDonations() {
+  if (config.donationalerts_enabled === false) return;
+  if (!config.donationalerts_access_token) return;
+
+  try {
+    const token = await ensureDonationToken();
+    const items = await donationOAuth.getDonations(token);
+    const lastId = Number(config.donationalerts_last_id) || 0;
+    const fresh = items
+      .filter((d) => Number(d.id) > lastId)
+      .sort((a, b) => Number(a.id) - Number(b.id));
+    if (!fresh.length) return;
+
+    const maxId = Math.max(...fresh.map((d) => Number(d.id) || 0));
+    config = sanitize({ ...config, donationalerts_last_id: maxId });
+    persistConfig();
+
+    for (const donation of fresh) {
+      const event = {
+        type: 'donation',
+        platform: 'donationalerts',
+        user: donation.username || 'Аноним',
+        amount: Number(donation.amount) || 0,
+        currency: donation.currency || 'RUB',
+        message: donation.message || '',
+        time: Date.parse(donation.created_at) || Date.now(),
+      };
+      sendToWindow('tiktok:event', event);
+      overlay.broadcast({ type: 'event', event });
+      log({
+        level: 'info',
+        text: `Донат: ${event.user} — ${event.amount} ${event.currency}`,
+      });
+      if (config.speak_donations) {
+        tts.speak(`${event.user} задонатил ${event.amount} ${event.currency}. ${event.message}`);
+      }
+    }
+  } catch (err) {
+    log({ level: 'error', text: `DonationAlerts: ${err.message}` });
+  }
+}
+
+function startDonationPolling() {
+  if (donationTimer) return;
+  pollDonations();
+  donationTimer = setInterval(pollDonations, 30000);
+}
+
+function stopDonationPolling() {
+  if (donationTimer) {
+    clearInterval(donationTimer);
+    donationTimer = null;
+  }
 }
 
 // Фоновое ожидание подтверждения кода Twitch
@@ -633,6 +726,12 @@ async function applyRuntime(prev) {
   }
 
   syncViewers();
+
+  if (config.donationalerts_enabled !== false && config.donationalerts_access_token) {
+    startDonationPolling();
+  } else {
+    stopDonationPolling();
+  }
 }
 
 // ============================================================
@@ -1029,6 +1128,50 @@ function registerIpcHandlers() {
     return { ok: true, oauth: oauthStatus() };
   });
 
+  // DonationAlerts
+  ipcMain.handle('oauth:da:start', async () => {
+    try {
+      if (!config.donationalerts_client_id || !config.donationalerts_client_secret) {
+        throw new Error('не заданы Client ID и Client Secret DonationAlerts');
+      }
+      const tokens = await donationOAuth.startAuth({
+        clientId: config.donationalerts_client_id,
+        clientSecret: config.donationalerts_client_secret,
+        openUrl: (url) => shell.openExternal(url),
+      });
+      config = sanitize({
+        ...config,
+        donationalerts_access_token: tokens.accessToken,
+        donationalerts_refresh_token: tokens.refreshToken,
+        donationalerts_token_expires_at: Date.now() + tokens.expiresIn * 1000,
+        donationalerts_enabled: true,
+        donationalerts_last_id: 0,
+      });
+      persistConfig();
+      notifyConfig();
+      startDonationPolling();
+      log({ level: 'info', text: 'DonationAlerts: вход выполнен' });
+      return { ok: true, oauth: oauthStatus() };
+    } catch (err) {
+      log({ level: 'error', text: `DonationAlerts: ${err.message}` });
+      return { ok: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('oauth:da:logout', () => {
+    stopDonationPolling();
+    config = sanitize({
+      ...config,
+      donationalerts_access_token: '',
+      donationalerts_refresh_token: '',
+      donationalerts_token_expires_at: 0,
+      donationalerts_last_id: 0,
+    });
+    persistConfig();
+    notifyConfig();
+    return { ok: true, oauth: oauthStatus() };
+  });
+
   // Отправка сообщения в чат площадки (Twitch / YouTube)
   ipcMain.handle('chat:send', async (_event, payload = {}) => {
     const text = String(payload.text || '').trim();
@@ -1323,6 +1466,10 @@ if (!gotLock) {
     }
     broadcastOverlayInfo();
     syncViewers(true);
+
+    if (config.donationalerts_access_token && config.donationalerts_enabled !== false) {
+      startDonationPolling();
+    }
 
     // Эмоуты грузим сразу по сохранённому каналу, не дожидаясь коннекта чата
     if (config.twitch_channel && config.emotes_enabled !== false) {

@@ -127,6 +127,15 @@ const DEFAULT_CONFIG = {
   google_access_token: '',
   google_refresh_token: '',
   google_token_expires_at: 0,
+  // DonationAlerts
+  donationalerts_client_id: builtins.donationalertsClientId || '',
+  donationalerts_client_secret: builtins.donationalertsClientSecret || '',
+  donationalerts_enabled: true,
+  donationalerts_access_token: '',
+  donationalerts_refresh_token: '',
+  donationalerts_token_expires_at: 0,
+  donationalerts_last_id: 0,
+  speak_donations: true,
   // Площадка для отправки сообщений из нижней панели
   send_platform: 'twitch',
   // Кастомные команды
@@ -344,6 +353,14 @@ function sanitize(config) {
   out.google_client_secret = String(out.google_client_secret || '').trim() || BUILTIN_GOOGLE_CLIENT_SECRET;
   out.google_access_token = String(out.google_access_token || '').trim();
   out.google_refresh_token = String(out.google_refresh_token || '').trim();
+  out.donationalerts_client_id = String(out.donationalerts_client_id || '').trim();
+  out.donationalerts_client_secret = String(out.donationalerts_client_secret || '').trim();
+  out.donationalerts_enabled = out.donationalerts_enabled !== false;
+  out.donationalerts_access_token = String(out.donationalerts_access_token || '').trim();
+  out.donationalerts_refresh_token = String(out.donationalerts_refresh_token || '').trim();
+  out.donationalerts_token_expires_at = Number(out.donationalerts_token_expires_at) || 0;
+  out.donationalerts_last_id = Number(out.donationalerts_last_id) || 0;
+  out.speak_donations = out.speak_donations !== false;
   out.google_token_expires_at = Number(out.google_token_expires_at) || 0;
 
   out.send_platform = ['twitch', 'youtube'].includes(out.send_platform)
@@ -374,6 +391,9 @@ const SECRET_FIELDS = [
   'google_client_secret',
   'google_access_token',
   'google_refresh_token',
+  'donationalerts_client_secret',
+  'donationalerts_access_token',
+  'donationalerts_refresh_token',
 ];
 const ENC_PREFIX = 'enc:v1:';
 
