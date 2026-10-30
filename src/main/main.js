@@ -901,7 +901,7 @@ function registerIpcHandlers() {
         clientId: started.clientId,
         clientSecret: started.clientSecret,
         openUrl: (url) => shell.openExternal(url),
-      }).then((tokens) => {
+      }).then(async (tokens) => {
         config = sanitize({
           ...config,
           google_access_token: tokens.accessToken,
@@ -911,6 +911,21 @@ function registerIpcHandlers() {
         persistConfig();
         notifyConfig();
         log({ level: 'info', text: 'Google: вход выполнен' });
+
+        // После входа сразу подключаем YouTube-чат, если канал уже задан
+        if (config.youtube_channel && config.youtube_api_key) {
+          try {
+            await connectYouTube({
+              channel: config.youtube_channel,
+              apiKey: config.youtube_api_key,
+              videoId: config.youtube_video_id,
+              autoReconnect: config.youtube_auto_reconnect,
+            });
+            log({ level: 'info', text: `YouTube ${config.youtube_channel} подключён после входа` });
+          } catch (err) {
+            log({ level: 'error', text: `YouTube после входа: ${err.message}` });
+          }
+        }
       }).catch((err) => {
         log({ level: 'error', text: `Google OAuth: ${err.message}` });
         sendToWindow('oauth:error', { provider: 'google', message: err.message });
