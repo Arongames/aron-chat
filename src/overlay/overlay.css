@@ -1,0 +1,265 @@
+/* ============================================================
+   Оверлей для OBS: прозрачный фон, плоские карточки в стиле Hibiki.
+   Размер шрифта масштабируется переменной --scale из настроек.
+   ============================================================ */
+
+/* Атрибут hidden должен побеждать любые display из правил ниже */
+[hidden] { display: none !important; }
+
+:root {
+  --bg: rgba(11, 13, 17, 0.78);
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #e9e9ec;
+  --muted: #8b929d;
+  --mint: #30b586;
+  --mint-2: #52e89d;
+  --tw: #9146ff;
+  --yt: #ff4444;
+  --tt: #00f2ea;
+  --pink: #d46275;
+  --lilac: #8e77d4;
+  --gold: #cfac60;
+  --scale: 1;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: transparent;
+  overflow: hidden;
+  font-family: 'Exo 2', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Позиция виджета ---------- */
+.wrap {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: min(560px, calc(100vw - 48px));
+  max-height: 82vh;
+  pointer-events: none;
+}
+.pos-bottom-left  { left: 24px;  bottom: 24px; }
+.pos-top-left     { left: 24px;  top: 24px; justify-content: flex-start; }
+.pos-bottom-right { right: 24px; bottom: 24px; }
+.pos-top-right    { right: 24px; top: 24px; justify-content: flex-start; }
+
+/* ---------- Счётчики зрителей ---------- */
+.bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.viewers {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  font-size: calc(11px * var(--scale));
+  color: var(--muted);
+}
+.viewers[hidden] { display: none; }
+.v-item { display: inline-flex; align-items: center; gap: 5px; }
+.v-item b { color: #dfe2e7; font-weight: 600; font-variant-numeric: tabular-nums; }
+.v-item i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.p-yt { background: var(--yt); }
+.p-tw { background: var(--tw); }
+.p-tt { background: var(--tt); }
+
+/* ---------- Лента ---------- */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  justify-content: flex-end;
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: calc(9px * var(--scale));
+  padding: calc(8px * var(--scale)) calc(12px * var(--scale)) calc(8px * var(--scale)) calc(14px * var(--scale));
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  backdrop-filter: blur(10px);
+  color: var(--text);
+  font-size: calc(14px * var(--scale));
+  line-height: 1.35;
+  word-break: break-word;
+  animation: slide-in 0.32s cubic-bezier(0.2, 0.72, 0.2, 1);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+/* Цветная полоска платформы слева */
+.row::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 7px 0 0 7px;
+  background: transparent;
+}
+.row.tw::before { background: var(--tw); }
+.row.yt::before { background: var(--yt); }
+.row.tt::before { background: var(--tt); }
+
+.av {
+  position: relative;
+  overflow: hidden;
+  width: calc(28px * var(--scale));
+  height: calc(28px * var(--scale));
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: calc(11px * var(--scale));
+  font-weight: 600;
+  color: #eef0f3;
+  background: #232a34;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.body { min-width: 0; }
+.line1 { display: flex; align-items: baseline; gap: 6px; }
+.nick {
+  font-weight: 600;
+  font-size: calc(13px * var(--scale));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row.tw .nick { color: #c3a4ff; }
+.row.yt .nick { color: #ff9a9a; }
+.row.tt .nick { color: #7ef0ea; }
+.text { color: #d8dce2; margin-top: 1px; font-size: var(--chat-font, 13px); }
+
+/* Крупный значок площадки справа */
+.plat-big {
+  width: var(--plat-icon, 22px);
+  height: var(--plat-icon, 22px);
+  object-fit: contain;
+  opacity: 0.9;
+}
+body.hide-plat-icons .plat-big { display: none; }
+
+/* ---------- События ---------- */
+.row.ev { background: rgba(11, 13, 17, 0.82); }
+.row.ev .text { color: var(--muted); }
+.row.like .badge { color: var(--pink); }
+.badge {
+  font-size: calc(9px * var(--scale));
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.row.follow .badge { color: var(--pink); }
+.row.sub .badge { color: var(--lilac); }
+.row.gift .badge { color: var(--gold); }
+.row.follow::before { background: var(--pink); }
+.row.sub::before { background: var(--lilac); }
+.row.gift::before { background: var(--gold); }
+.row.follow { background: rgba(212, 98, 117, 0.07); }
+.row.sub { background: rgba(142, 119, 212, 0.07); }
+.row.gift { background: rgba(207, 172, 96, 0.07); }
+
+/* ---------- Анимации ---------- */
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-26px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.row.fading { opacity: 0; transform: translateX(-18px); }
+
+/* ---------- Статус связи ---------- */
+.status {
+  position: fixed;
+  top: 16px;
+  left: 24px;
+  font-size: 13px;
+  color: #ff8a94;
+  background: var(--bg);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  padding: 7px 11px;
+  border-radius: 7px;
+  display: none;
+}
+.status.visible { display: block; }
+
+/* ============================================================
+   Два виджета: чат (/overlay/chat) и зрители (/overlay/viewers).
+   Разметка общая, режим задаёт body[data-widget].
+   ============================================================ */
+
+body[data-widget="chat"] .bar { display: none; }
+body[data-widget="viewers"] .feed { display: none; }
+
+/* В чат-оверлее счётчики не показываем — они живут в своём виджете */
+.v-title,
+.v-name { display: none; }
+
+body[data-widget="viewers"] .wrap {
+  width: auto;
+  max-height: none;
+}
+body[data-widget="viewers"] .bar { margin: 0; }
+
+body[data-widget="viewers"] .viewers {
+  gap: calc(16px * var(--scale));
+  padding: calc(9px * var(--scale)) calc(15px * var(--scale));
+}
+body[data-widget="viewers"] .v-title {
+  display: inline;
+  font-size: calc(9px * var(--scale));
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5f6672;
+  padding-right: calc(14px * var(--scale));
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+body[data-widget="viewers"] .v-name {
+  display: inline;
+  font-size: calc(9.5px * var(--scale));
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8b929d;
+}
+body[data-widget="viewers"] .v-item b {
+  font-size: calc(17px * var(--scale));
+  font-weight: 600;
+  color: #e9e9ec;
+}
+body[data-widget="viewers"] .v-item i {
+  width: calc(7px * var(--scale));
+  height: calc(7px * var(--scale));
+}
+
+/* Аватары и эмоуты */
+.av .av-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.av.has-img { background: #12151b; }
+
+.row .text .emote {
+  height: 1.5em;
+  max-width: 8em;
+  vertical-align: -0.32em;
+  margin: 0 1px;
+  object-fit: contain;
+}

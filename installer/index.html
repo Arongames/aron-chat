@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Установка Aron Chat</title>
+  <link rel="stylesheet" href="./fonts/fonts.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="window">
+    <div class="titlebar">
+      <div class="titlebar-drag">
+        <img src="./assets/icon-256.png" alt="" />
+        <b>ARON CHAT</b>
+        <span>установка</span>
+      </div>
+      <button class="win-btn" id="btnMin" title="Свернуть">
+        <svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg>
+      </button>
+      <button class="win-btn close" id="btnClose" title="Закрыть">
+        <svg viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+      </button>
+    </div>
+
+    <div class="hero">
+      <img class="hero-logo" src="./assets/icon-256.png" alt="" />
+      <div class="hero-text">
+        <h1>Aron Chat</h1>
+        <p>Чат TikTok, Twitch и YouTube · озвучка · оверлеи для OBS</p>
+      </div>
+      <span class="version" id="version">1.10.3</span>
+    </div>
+
+    <div class="steps" id="steps">
+      <div class="step active" data-step="1"><i>1</i><span>Условия</span></div>
+      <div class="step" data-step="2"><i>2</i><span>Папка</span></div>
+      <div class="step" data-step="3"><i>3</i><span>Установка</span></div>
+      <div class="step" data-step="4"><i>4</i><span>Готово</span></div>
+    </div>
+
+    <main class="content">
+      <!-- Шаг 1: условия -->
+      <section class="page active" data-page="1">
+        <div class="terms-box" id="termsBox"></div>
+        <label class="accept">
+          <input type="checkbox" id="acceptTerms" />
+          <span>Я принимаю условия использования</span>
+        </label>
+      </section>
+
+      <!-- Шаг 2: папка -->
+      <section class="page" data-page="2">
+        <div class="field">
+          <label for="installDir">Папка установки</label>
+          <div class="path-row">
+            <input type="text" class="input" id="installDir" spellcheck="false" />
+            <button class="btn" id="btnBrowse">Обзор…</button>
+          </div>
+          <p class="note" id="dirNote">Приложение будет установлено в выбранную папку. Ярлыки появятся на рабочем столе и в меню «Пуск».</p>
+        </div>
+
+        <div class="summary">
+          <div><span>Версия</span><b id="sumVersion">1.10.3</b></div>
+          <div><span>Займёт на диске</span><b id="sumSize">≈ 450 МБ</b></div>
+          <div><span>Права</span><b>не требуются</b></div>
+        </div>
+
+        <p class="error" id="dirError" hidden></p>
+      </section>
+
+      <!-- Шаг 3: прогресс -->
+      <section class="page" data-page="3">
+        <div class="progress-wrap">
+          <div class="progress-head">
+            <span id="progressText">Подготовка…</span>
+            <b id="progressPercent">0%</b>
+          </div>
+          <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+          <p class="note" id="progressHint">Не закрывайте окно — это займёт меньше минуты.</p>
+        </div>
+      </section>
+
+      <!-- Шаг 4: готово -->
+      <section class="page" data-page="4">
+        <div class="done">
+          <div class="done-icon">
+            <svg viewBox="0 0 24 24"><path d="m4 12 5 5L20 6"/></svg>
+          </div>
+          <h2>Установлено</h2>
+          <p>Aron Chat готов к запуску. Ярлык уже на рабочем столе.</p>
+          <p class="done-path" id="donePath">—</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="footer-hint" id="footerHint">Прочитайте условия и примите их</span>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="btnBack" hidden>Назад</button>
+      <button class="btn primary" id="btnNext" disabled>Далее</button>
+      <button class="btn primary" id="btnInstall" hidden>Установить</button>
+      <button class="btn primary" id="btnLaunch" hidden>Запустить</button>
+      <button class="btn ghost" id="btnFinish" hidden>Закрыть</button>
+    </footer>
+  </div>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+﻿[OK]   три вкладки — chat-tab,settings-tab,about-tab
+[OK]   заголовок окна — Aron Chat
+[FAIL] активна вкладка чата — settings-tab
+[OK]   config:get отвечает
+[OK]   поле speechify_key
+[OK]   поле tiktok_username
+[OK]   поле voice_id
+[OK]   поле model
+[OK]   поле language
+[OK]   поле speak_username
+[OK]   поле speak_follows
+[OK]   поле speak_gifts
+[OK]   поле ignored_prefixes
+[OK]   поле custom_commands
+[OK]   поле twitch_channel
+[OK]   поле youtube_channel
+[OK]   поле youtube_api_key
+[OK]   поле youtube_auto_reconnect
+[OK]   встроенного ключа Speechify нет — ""
+[FAIL] встроенного ключа YouTube нет
+[OK]   путь к config.json — H:\blobs\chat\config.json
+[OK]   версия приложения — 1.8.0
+[OK]   ключ маскирован — не задан
+[FAIL] голос по умолчанию geffen_32 — agrippina
+[OK]   модель simba-3.5
+[OK]   язык ru-RU
+[OK]   префикс !g
+[OK]   команда !дискорд
+[OK]   нет localhost:7860
+[OK]   нет XTTS
+[OK]   нет селектора движка
+[OK]   нет OBS-оверлея
+[OK]   чип TikTok есть
+[OK]   чип Twitch вернулся
+[OK]   чип YouTube вернулся
+[OK]   чип Speechify есть
+[OK]   вкладка настроек открыта
+[OK]   карточек настроек: 5 — 5
+[OK]   поле TikTok — Подключить чат
+[OK]   кнопка TikTok «Подключить чат»
+[OK]   поле Twitch — Подключить чат
+[OK]   кнопка Twitch «Подключить чат»
+[OK]   поле YouTube
+[OK]   API-ключ YouTube
+[OK]   чекбокс авто-реконнекта
+[OK]   кнопка YouTube «Подключить чат»
+[OK]   ключ Speechify скрыт (password)
+[OK]   поля озвучки
+[OK]   три чекбокса озвучки
+[OK]   префиксы
+[OK]   команды
+[OK]   кнопка «Сохранить» — Сохранить
+[OK]   путь и «открыть папку»
+[OK]   TikTok: @ снят — TestNick
+[OK]   Twitch: ник в lowercase — testchannel
+[OK]   YouTube: канал сохранён
+[OK]   YouTube: API-ключ сохранён
+[OK]   YouTube: auto_reconnect=false сохранён
+[OK]   voice_id сохранён
+[OK]   префиксы сохранены
+[OK]   speak_username=true сохранён
+[OK]   всё легло на диск
+[OK]   tiktok:connect(пусто) → ошибка — {"ok":false,"error":"укажите никнейм трансляции TikTok (без @)"}
+[OK]   twitch:connect(пусто) → ошибка — {"ok":false,"error":"укажите канал Twitch"}
+[OK]   youtube:connect(пусто) → ошибка — {"ok":false,"error":"Активная трансляция канала не найдена"}
+[OK]   tiktok:status есть connected
+[OK]   twitch:status есть connected
+[OK]   youtube:status есть connected
+[OK]   команда добавлена — ["!дискорд","!тест"]
+[OK]   команда с описанием
+[OK]   строк в таблице: 2 — 2
+[OK]   пустая команда не добавлена
+[OK]   дубль не создал второй записи
+[OK]   дубль перезаписал ответ
+[OK]   команда удалена
+[OK]   «Сохранить» даёт статус — Сохранено
+[OK]   статус зелёный — save-status ok
+[OK]   ключ скрыт
+[OK]   по клику виден — text
+[OK]   обратно скрыт
+node : ERROR: исключение в странице: Uncaught
+строка:1 знак:1
++ node e2e_check.js 9223 > e2e_out3.txt 2>&1; "exit=$LASTEXITCODE"; Get ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR: исключение в странице: Uncaught:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

@@ -1,0 +1,69 @@
+{
+  "name": "streamer-multichat",
+  "version": "1.10.17",
+  "description": "Aron Chat: TikTok LIVE, Twitch, YouTube, оверлей для OBS и облачная озвучка Speechify",
+  "author": {
+    "name": "SGR (StreamRateGame)",
+    "url": "https://arongames.by/"
+  },
+  "build": {
+    "appId": "com.streamer.multichat",
+    "productName": "Aron Chat",
+    "copyright": "Copyright © 2026 SGR (StreamRateGame)",
+    "directories": {
+      "output": "dist-new"
+    },
+    "asarUnpack": [
+      "assets/piper/**/*"
+    ],
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json",
+      "!**/*test*.js"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "Aron Chat",
+      "artifactName": "${productName} Setup ${version}.${ext}",
+      "language": "1049",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "include": "build/installer.nsh"
+    },
+    "buildVersion": "1.10.17.0"
+  },
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run build:portable && npm run build:setup",
+    "build:portable": "electron-builder --win portable",
+    "build:setup": "node tools/build-installer.js",
+    "build:nsis": "electron-builder --win nsis",
+    "test:e2e": "electron . --remote-debugging-port=9222"
+  },
+  "dependencies": {
+    "tiktok-live-connector": "^2.5.0",
+    "tmi.js": "^1.8.5",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}

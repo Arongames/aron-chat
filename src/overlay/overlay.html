@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Прозрачный фон обязателен для OBS Browser Source -->
+  <title>Aron Chat — оверлей чата</title>
+  <link rel="stylesheet" href="/fonts/fonts.css" />
+  <link rel="stylesheet" href="/overlay.css" />
+  <link rel="stylesheet" href="/custom.css?widget=chat" />
+</head>
+<body data-widget="chat">
+  <div class="wrap pos-bottom-left" id="wrap">
+    <div class="bar" id="bar">
+      <span class="v-title">Зрители</span>
+      <span class="viewers" id="viewers" hidden>
+        <span class="v-item"><i class="p-yt"></i><span class="v-name">YouTube</span><b data-v="youtube">—</b></span>
+        <span class="v-item"><i class="p-tw"></i><span class="v-name">Twitch</span><b data-v="twitch">—</b></span>
+        <span class="v-item"><i class="p-tt"></i><span class="v-name">TikTok</span><b data-v="tiktok">—</b></span>
+      </span>
+    </div>
+    <div class="feed" id="feed"></div>
+  </div>
+
+  <div class="status" id="status">Нет связи с приложением — переподключение…</div>
+
+  <script src="/overlay.js"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+﻿[OK]   три вкладки — chat-tab,settings-tab,about-tab
+[OK]   заголовок окна — Aron Chat
+[OK]   активна вкладка чата — chat-tab
+[OK]   config:get отвечает
+[OK]   поле speechify_key
+[OK]   поле tiktok_username
+[OK]   поле voice_id
+[OK]   поле model
+[OK]   поле language
+[OK]   поле speak_username
+[OK]   поле speak_follows
+[OK]   поле speak_gifts
+[OK]   поле ignored_prefixes
+[OK]   поле custom_commands
+[OK]   поле twitch_channel
+[OK]   поле youtube_channel
+[OK]   поле youtube_api_key
+[OK]   поле youtube_auto_reconnect
+[OK]   встроенного ключа Speechify нет — ""
+[OK]   встроенного ключа YouTube нет
+[OK]   путь к config.json — H:\blobs\chat\config.json
+[OK]   версия приложения — 1.8.0
+[OK]   ключ маскирован — не задан
+[OK]   голос по умолчанию geffen_32 — geffen_32
+[OK]   модель simba-3.5
+[OK]   язык ru-RU
+[OK]   префикс !g
+[OK]   команда !дискорд
+[OK]   нет localhost:7860
+[OK]   нет XTTS
+[OK]   нет селектора движка
+[OK]   нет OBS-оверлея
+[OK]   чип TikTok есть
+[OK]   чип Twitch вернулся
+[OK]   чип YouTube вернулся
+[OK]   чип Speechify есть
+[OK]   вкладка настроек открыта
+[OK]   карточек настроек: 5 — 5
+[OK]   поле TikTok — Подключить чат
+[OK]   кнопка TikTok «Подключить чат»
+[OK]   поле Twitch — Подключить чат
+[OK]   кнопка Twitch «Подключить чат»
+[OK]   поле YouTube
+[OK]   API-ключ YouTube
+[OK]   чекбокс авто-реконнекта
+[OK]   кнопка YouTube «Подключить чат»
+[OK]   ключ Speechify скрыт (password)
+[OK]   поля озвучки
+[OK]   три чекбокса озвучки
+[OK]   префиксы
+[OK]   команды
+[OK]   кнопка «Сохранить» — Сохранить
+[OK]   путь и «открыть папку»
+[OK]   TikTok: @ снят — TestNick
+[OK]   Twitch: ник в lowercase — testchannel
+[OK]   YouTube: канал сохранён
+[OK]   YouTube: API-ключ сохранён
+[OK]   YouTube: auto_reconnect=false сохранён
+[OK]   voice_id сохранён
+[OK]   префиксы сохранены
+[OK]   speak_username=true сохранён
+[OK]   всё легло на диск
+[OK]   tiktok:connect(пусто) → ошибка — {"ok":false,"error":"укажите никнейм трансляции TikTok (без @)"}
+[OK]   twitch:connect(пусто) → ошибка — {"ok":false,"error":"укажите канал Twitch"}
+[FAIL] youtube:connect(пусто) → ошибка — {"ok":true}
+[OK]   tiktok:status есть connected
+[OK]   twitch:status есть connected
+[OK]   youtube:status есть connected
+[OK]   команда добавлена — ["!дискорд","!тест"]
+[OK]   команда с описанием
+[OK]   строк в таблице: 2 — 2
+[OK]   пустая команда не добавлена
+[OK]   дубль не создал второй записи
+[OK]   дубль перезаписал ответ
+[OK]   команда удалена
+[OK]   «Сохранить» даёт статус — Сохранено
+[OK]   статус зелёный — save-status ok
+[OK]   ключ скрыт
+[OK]   по клику виден — text
+[OK]   обратно скрыт
+[OK]   три площадки в пикере — tiktok,twitch,youtube
+[OK]   панель есть
+[OK]   поле ввода широкое — 612
+[OK]   кнопка «Отправить» видна
+[OK]   Enter в подсказке — Сообщение или команда (например !дискорд) — Enter
+[OK]   кнопка «Отправить» — Отправить
+[OK]   panel:tiktok команда выполнена — {"ok":true,"executed":"!дискорд","response":"Присоединяйтесь к нашему серверу Дискорд! Ссылка в описании профиля."}
+[OK]   panel:tiktok вернула ответ — Присоединяйтесь к нашему серверу Дискорд! Ссылка в описании профиля.
+[OK]   panel:youtube команда тоже выполняется
+[OK]   panel:пустой текст → empty
+[OK]   Enter отправляет и очищает поле
+[OK]   строка появилась в чате — 3
+[OK]   меню открывается по клику
+[OK]   меню закрывается после выбора
+[OK]   иконка TikTok — TikTok
+[OK]   иконка меняется на Twitch — Twitch
+[OK]   иконка меняется на YouTube — YouTube
+[OK]   иконка вернулась на TikTok — TikTok
+[OK]   подсказка TikTok про команды — Сообщение или команда (например !дискорд) — Enter
+[OK]   подсказка Twitch про недоступность — Twitch: команды озвучиваются, отправка в чат площадки недоступна
+[OK]   активная опция подсвечена — tiktok
+[OK]   лента чата непустая — 3
+[OK]   лента событий непустая — 20
+[OK]   счётчик чата — 3
+[OK]   статус TikTok показан — отключено
+[OK]   статус Twitch показан — отключено
+[OK]   статус YouTube показан — Эфира нет. Проверка через 15 с (попытка 1)
+[OK]   статус ключа «не задан» — ключ не задан
+[OK]   в событиях есть путь к конфигy
+[OK]   в событиях подсказка про ключ — API-ключ Speechify не задан — озвучка недоступна. Введите ключ на вкладке «Настройки». | YouTube: авто-переподключение выкл
+[OK]   без ключа tts:test = false — false
+[OK]   вкладка «О программе» открыта
+[OK]   карточек «О программе»: 3 (тот же grid, что в настройках) — 3
+[OK]   плашка Koda внутри config-card (в стиле вкладки)
+[OK]   текст «Создано при помощи Koda» — Создано при помощи Koda
+[OK]   рамка: border-style solid — solid 1px
+[OK]   рамка с радиусом как у карточек — 10px
+[OK]   градиентная обводка — linear-gradient(rgba(168, 85, 247, 0.07), 
+[OK]   не кнопка (cursor default) — default
+[OK]   версия в «О программе» — 1.8.0
+[OK]   разработчик SGR / StreamGameRate
+[OK]   год 2026
+[OK]   списки возможностей в стиле вкладки — 2 / 7
+[OK]   плашка Koda в сайдбаре
+node : ERROR: исключение в странице: Uncaught
+строка:1 знак:1
++ node e2e_check.js 9223 > e2e_final3.txt 2>&1; "exit=$LASTEXITCODE"; G ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ERROR: исключение в странице: Uncaught:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

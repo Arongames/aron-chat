@@ -1,0 +1,29 @@
+# зависимости и сборки
+node_modules/
+dist/
+dist-new/
+dist-setup/
+installer/payload.7z
+installer/7za.exe
+
+# тяжёлые голоса Piper — не в репозиторий
+assets/piper/
+
+# локальные настройки с ключами
+config.json
+config.json.tmp
+config.json.bak
+
+# служебные папки разработки
+_mock/
+_decomp/
+_ref/
+*.log
+# ��������� ����� � ���������� �������
+_install-custom*/
+_restore/
+dist-setup-dir/
+_dbg*.js
+src/renderer/_probe.txt
+
+src/main/builtin.js

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aron Chat</title>
+  <link rel="stylesheet" href="../../assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ═══════════ РЕЙЛ ═══════════ -->
+    <aside class="rail">
+      <div class="rail-logo">
+        <img src="./avatar-raw.png" alt="Aron Chat" />
+      </div>
+
+      <nav class="rail-nav">
+        <button class="rail-item active" data-page="chat" title="Чат">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>
+        </button>
+        <button class="rail-item" data-page="events" title="События">
+          <svg viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+        </button>
+        <button class="rail-item" data-page="widgets" title="Виджеты">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </button>
+        <button class="rail-item" data-page="settings" title="Настройки">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </button>
+      </nav>
+
+      <div class="rail-spacer"></div>
+
+      <button class="rail-item" data-page="about" title="О программе">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      </button>
+      <div class="rail-version" id="railVersion">1.9.0</div>
+    </aside>
+
+    <!-- ═══════════ РАБОЧАЯ ОБЛАСТЬ ═══════════ -->
+    <div class="workspace">
+
+      <div class="titlebar">
+        <div class="titlebar-drag">
+          <b>ARON CHAT</b>
+          <span id="titlebarVersion">v1.9.0</span>
+        </div>
+        <div class="titlebar-buttons">
+          <button class="win-btn" id="winMinimize" title="Свернуть">
+            <svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg>
+          </button>
+          <button class="win-btn" id="winMaximize" title="Развернуть">
+            <svg viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9"/></svg>
+          </button>
+          <button class="win-btn close" id="winClose" title="Закрыть">
+            <svg viewBox="0 0 12 12"><path d="M2 2l8 8M10 2l-8 8"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <header class="topbar">
+        <div class="pagehead">
+          <h1 id="pageTitle">Чат трансляции</h1>
+          <span class="live" id="liveBadge"><i></i>live</span>
+        </div>
+
+        <div class="chips">
+          <div class="chip tiktok" id="chipTiktok">
+            <span class="dot" id="dotTiktok"></span>
+            <img class="chip-icon" src="./tiktok-logo.svg" alt="" />
+            <span class="chip-name">TikTok</span>
+            <b class="chip-count" id="countTiktok">—</b>
+          </div>
+          <div class="chip twitch" id="chipTwitch">
+            <span class="dot" id="dotTwitch"></span>
+            <img class="chip-icon" src="./twitch-logo.svg" alt="" />
+            <span class="chip-name">Twitch</span>
+            <b class="chip-count" id="countTwitch">—</b>
+          </div>
+          <div class="chip youtube" id="chipYoutube">
+            <span class="dot" id="dotYoutube"></span>
+            <img class="chip-icon" src="./youtube-logo.svg" alt="" />
+            <span class="chip-name">YouTube</span>
+            <b class="chip-count" id="countYoutube">—</b>
+          </div>
+          <div class="chip speechify" id="chipKey">
+            <span class="dot" id="dotKey"></span>
+            <span class="chip-name">Speechify</span>
+            <em class="chip-meta" id="statusKey">ключ не задан</em>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="btn" id="btnTtsTest">
+            <svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10a7 7 0 0 1-14 0"/><path d="M12 19v3"/></svg>
+            Проверить озвучку
+          </button>
+          <button class="btn" id="btnOpenOverlay">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg>
+            Оверлей
+          </button>
+        </div>
+      </header>
+
+      <main class="content">
+
+        <!-- ─────────── ЧАТ ─────────── -->
+        <section id="page-chat" class="page active">
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title">Чат</span>
+              <span class="count" id="chatCount">0</span>
+              <div class="spacer"></div>
+              <div class="font-ctrl">
+                <button class="icon-btn" id="fontMinus" title="Меньше текст">A−</button>
+                <button class="icon-btn" id="fontPlus" title="Больше текст">A+</button>
+              </div>
+              <div class="seg">
+                <button class="on" id="segScroll">Автопрокрутка</button>
+              </div>
+              <button class="icon-btn" id="btnClearChat" title="Очистить ленту">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+              </button>
+            </div>
+            <div class="feed" id="chatLog"></div>
+            <div class="feed-empty" id="chatEmpty">
+              <span>Здесь появятся сообщения TikTok, Twitch и YouTube</span>
+            </div>
+          </div>
+
+          <!-- Отправка в чат площадки (нужен OAuth) -->
+          <div class="sendbar">
+            <select class="input send-platform" id="sendPlatform" title="Куда отправить">
+              <option value="twitch">Twitch</option>
+              <option value="youtube">YouTube</option>
+            </select>
+            <input type="text" class="input" id="sendInput" placeholder="Сообщение в чат площадки — Enter" />
+            <button class="btn primary" id="btnSendMessage">Отправить</button>
+          </div>
+        </section>
+
+        <!-- ─────────── СОБЫТИЯ ─────────── -->
+        <section id="page-events" class="page">
+          <div class="panel">
+            <div class="panel-head">
+              <span class="panel-title">События</span>
+              <span class="count" id="eventsCount">0</span>
+              <div class="spacer"></div>
+              <button class="icon-btn" id="btnClearEvents" title="Очистить события">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+              </button>
+            </div>
+            <div class="feed" id="eventsLog"></div>
+            <div class="feed-empty" id="eventsEmpty">
+              <span>Здесь появятся лайки, подписки и подарки</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────────── ВИДЖЕТЫ ─────────── -->
+        <section id="page-widgets" class="page">
+          <div class="widgets-grid">
+            <!-- Виджет 1: чат -->
+            <div class="card">
+              <h2><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>Оверлей чата</h2>
+
+              <div class="field">
+                <label>Browser Source — чат</label>
+                <div class="url-row">
+                  <input type="text" class="input mono" id="overlayChatUrl" readonly value="—" />
+                  <button class="btn" id="btnCopyChatOverlay">Копировать</button>
+                </div>
+              </div>
+
+              <div class="actions-row">
+                <button class="btn primary" id="btnOpenChatOverlay">Открыть в браузере</button>
+              </div>
+
+              <div class="field-pair">
+                <div class="field">
+                  <label>Позиция</label>
+                  <select class="input" id="overlayChatPosition">
+                    <option value="bottom-left">Слева снизу</option>
+                    <option value="top-left">Слева сверху</option>
+                    <option value="bottom-right">Справа снизу</option>
+                    <option value="top-right">Справа сверху</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Масштаб, %</label>
+                  <input type="number" class="input" id="overlayChatScale" min="60" max="180" step="5" />
+                </div>
+              </div>
+
+              <div class="field-pair">
+                <div class="field">
+                  <label>Сообщений в ленте</label>
+                  <input type="number" class="input" id="overlayChatMaxMessages" min="3" max="30" step="1" />
+                </div>
+                <div class="field">
+                  <label>Скрывать через, сек (0 — нет)</label>
+                  <input type="number" class="input" id="overlayChatTtl" min="0" max="600" step="5" />
+                </div>
+              </div>
+
+              <div class="tg">
+                <div><div class="t">Показывать события</div><div class="s">Подписки, подарки, входы</div></div>
+                <label class="sw"><input type="checkbox" id="overlayShowEvents" /><span></span></label>
+              </div>
+
+              <div class="field">
+                <label>Пресеты вида</label>
+                <div class="actions-row preset-row">
+                  <button class="btn" data-chat-preset="compact">Компактный</button>
+                  <button class="btn" data-chat-preset="large">Крупный</button>
+                  <button class="btn" data-chat-preset="donate">Только донаты</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="overlayChatCss">Свой CSS для чат-оверлея</label>
+                <textarea class="input css-editor" id="overlayChatCss" spellcheck="false"
+                  placeholder=".row { border-radius: 0; }"></textarea>
+                <p class="note">Применяется после сохранения и обновления превью.</p>
+              </div>
+
+              <div class="preview">
+                <iframe id="overlayChatPreview" title="Предпросмотр чат-оверлея"></iframe>
+                <div class="preview-empty" id="chatPreviewEmpty">Оверлей выключен</div>
+              </div>
+            </div>
+
+            <!-- Виджет 2: зрители -->
+            <div class="card">
+              <h2><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/></svg>Оверлей зрителей</h2>
+
+              <div class="tg">
+                <div><div class="t">Виджет включён</div><div class="s">Отдавать счётчики отдельной страницей</div></div>
+                <label class="sw"><input type="checkbox" id="overlayViewersEnabled" /><span></span></label>
+              </div>
+
+              <div class="field">
+                <label>Browser Source — зрители</label>
+                <div class="url-row">
+                  <input type="text" class="input mono" id="overlayViewersUrl" readonly value="—" />
+                  <button class="btn" id="btnCopyViewersOverlay">Копировать</button>
+                </div>
+              </div>
+
+              <div class="actions-row">
+                <button class="btn primary" id="btnOpenViewersOverlay">Открыть в браузере</button>
+              </div>
+
+              <div class="field-pair">
+                <div class="field">
+                  <label>Позиция</label>
+                  <select class="input" id="overlayViewersPosition">
+                    <option value="top-left">Слева сверху</option>
+                    <option value="top-right">Справа сверху</option>
+                    <option value="bottom-left">Слева снизу</option>
+                    <option value="bottom-right">Справа снизу</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Масштаб, %</label>
+                  <input type="number" class="input" id="overlayViewersScale" min="60" max="200" step="5" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Пресеты вида</label>
+                <div class="actions-row preset-row">
+                  <button class="btn" data-viewers-preset="small">Мелкий</button>
+                  <button class="btn" data-viewers-preset="large">Крупный</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="overlayViewersCss">Свой CSS для виджета зрителей</label>
+                <textarea class="input css-editor" id="overlayViewersCss" spellcheck="false"
+                  placeholder=".viewers { border-radius: 0; }"></textarea>
+              </div>
+
+              <div class="preview">
+                <iframe id="overlayViewersPreview" title="Предпросмотр виджета зрителей"></iframe>
+                <div class="preview-empty" id="viewersPreviewEmpty">Виджет выключен</div>
+              </div>
+            </div>
+
+            <!-- Сервер -->
+            <div class="card wide">
+              <h2><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg>Сервер оверлеев</h2>
+
+              <div class="server-row">
+                <div class="tg">
+                  <div><div class="t">Оверлей включён</div><div class="s">Поднимать сервер при запуске</div></div>
+                  <label class="sw"><input type="checkbox" id="overlayEnabled" /><span></span></label>
+                </div>
+
+                <div class="field">
+                  <label>Порт</label>
+                  <input type="number" class="input" id="overlayPort" min="1024" max="65535" step="1" />
+                </div>
+
+                <div class="actions-row">
+                  <button class="btn" id="btnRestartOverlay">Перезапустить сервер</button>
+                  <button class="btn ghost" id="btnReloadPreview">Обновить превью</button>
+                </div>
+              </div>
+
+              <div class="note" id="overlayHint">Сервер слушает только 127.0.0.1 — доступен лишь на этом компьютере.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────────── НАСТРОЙКИ ─────────── -->
+        <section id="page-settings" class="page">
+          <div class="setwrap">
+            <nav class="setnav">
+              <h3>Разделы</h3>
+              <input type="search" class="setnav-search" id="settingsSearch" placeholder="Поиск по настройкам" />
+              <button data-scroll="set-chat">Чат</button>
+              <button data-scroll="set-platforms">Площадки</button>
+              <button data-scroll="set-tts">Озвучка</button>
+              <button data-scroll="set-filters">Фильтры</button>
+              <button data-scroll="set-viewers">Зрители</button>
+              <button data-scroll="set-access">Доступ</button>
+              <button data-scroll="set-commands">Команды</button>
+              <button data-scroll="set-data">Данные</button>
+            </nav>
+
+            <div class="settings" id="settingsScroll">
+
+              <div class="grid">
+
+                <!-- Чат и оформление -->
+                <div class="card wide" id="set-chat">
+                  <h2><svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 5v14M7 19h4"/></svg>Чат и оформление</h2>
+
+                  <div class="field-pair">
+                    <div class="field">
+                      <label>Размер текста чата, px</label>
+                      <input type="number" class="input" id="chatFontSize" min="10" max="28" step="1" />
+                    </div>
+                    <div class="field">
+                      <label>Значки платформ, px</label>
+                      <input type="number" class="input" id="platformIconSize" min="14" max="40" step="1" />
+                    </div>
+                  </div>
+
+                  <div class="tg">
+                    <div><div class="t">Значки платформ справа</div><div class="s">Крупные логотипы площадок у каждого сообщения</div></div>
+                    <label class="sw"><input type="checkbox" id="showPlatformIcons" /><span></span></label>
+                  </div>
+
+                  <p class="note">Применяется к ленте приложения и к оверлею. Быстро менять размер можно кнопками A−/A+ в шапке чата.</p>
+                </div>
+
+                <!-- Площадки -->
+                <div class="card wide" id="set-platforms">
+                  <h2><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/></svg>Площадки</h2>
+                  <div class="three">
+                    <div class="platform-block">
+                      <div class="platform-head"><img src="./tiktok-logo.svg" alt="" /><span>TikTok LIVE</span></div>
+                      <div class="field">
+                        <label for="tiktokUsername">Никнейм трансляции (без @)</label>
+                        <input type="text" class="input" id="tiktokUsername" placeholder="например arongames" />
+                      </div>
+                      <div class="actions-row">
+                        <button class="btn primary" id="btnTiktokConnect">Подключить</button>
+                        <button class="btn ghost" id="btnTiktokDisconnect">Отключить</button>
+                      </div>
+                    </div>
+
+                    <div class="platform-block">
+                      <div class="platform-head"><img src="./twitch-logo.svg" alt="" /><span>Twitch</span></div>
+                      <div class="field">
+                        <label for="twitchChannel">Канал (без #)</label>
+                        <input type="text" class="input" id="twitchChannel" placeholder="например arongames" />
+                      </div>
+                      <div class="actions-row">
+                        <button class="btn primary" id="btnTwitchConnect">Подключить</button>
+                        <button class="btn ghost" id="btnTwitchDisconnect">Отключить</button>
+                      </div>
+                      <p class="note">Client ID для счётчика и входа уже встроен — менять не нужно.</p>
+                    </div>
+
+                    <div class="platform-block">
+                      <div class="platform-head"><img src="./youtube-logo.svg" alt="" /><span>YouTube Live</span></div>
+                      <div class="field">
+                        <label for="youtubeChannel">Канал (@handle, UC… или ссылка)</label>
+                        <input type="text" class="input" id="youtubeChannel" placeholder="например @arongames" />
+                      </div>
+                      <div class="field">
+                        <label for="youtubeApiKey">API-ключ Data API v3</label>
+                        <input type="password" class="input" id="youtubeApiKey" placeholder="AIza..." autocomplete="off" />
+                      </div>
+                      <div class="field">
+                        <label for="youtubeVideoId">Активный эфир (автоматически)</label>
+                        <input type="text" class="input" id="youtubeVideoId" readonly placeholder="определяется при подключении" />
+                      </div>
+                      <div class="tg compact">
+                        <div><div class="t">Авто-переподключение</div><div class="s">Находить новый эфир сам</div></div>
+                        <label class="sw"><input type="checkbox" id="youtubeAutoReconnect" /><span></span></label>
+                      </div>
+                      <div class="actions-row">
+                        <button class="btn primary" id="btnYoutubeConnect">Подключить</button>
+                        <button class="btn ghost" id="btnYoutubeDisconnect">Отключить</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Озвучка -->
+                <div class="card" id="set-tts">
+                  <h2><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10a7 7 0 0 1-14 0"/><path d="M12 19v3"/></svg>Озвучка</h2>
+
+                  <div class="field">
+                    <label for="ttsEngine">Движок озвучки</label>
+                    <select class="input" id="ttsEngine">
+                      <option value="speechify">Speechify — облако, нужен ключ</option>
+                      <option value="piper">Piper — офлайн, без ключа</option>
+                      <option value="none">Выключено</option>
+                    </select>
+                    <p class="note" id="engineHint"></p>
+                  </div>
+
+                  <div id="ttsSpeechify">
+                    <div class="field">
+                      <label for="speechifyKey">API-ключ Speechify</label>
+                      <div class="key-row">
+                        <input type="password" class="input" id="speechifyKey" placeholder="sk_..." autocomplete="off" />
+                        <button class="btn icon" id="btnToggleKey" title="Показать / скрыть">
+                          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                      </div>
+                      <p class="note" id="keyHint">Ключ хранится только в вашем config.json и не вшивается в приложение.</p>
+                    </div>
+
+                    <div class="field">
+                      <label for="voiceId">Голос Speechify</label>
+                      <input type="text" class="input" id="voiceId" list="voiceList" placeholder="alexei" />
+                      <datalist id="voiceList"></datalist>
+                      <p class="note" id="voiceHint">Для русского доступны alexei и agrippina.</p>
+                    </div>
+
+                    <div class="field-pair">
+                      <div class="field">
+                        <label for="modelSelect">Модель</label>
+                        <select class="input" id="modelSelect"></select>
+                      </div>
+                      <div class="field">
+                        <label for="languageSelect">Язык</label>
+                        <select class="input" id="languageSelect"></select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="ttsPiper">
+                    <div class="field">
+                      <label for="piperVoice">Голос Piper</label>
+                      <select class="input" id="piperVoice"></select>
+                      <p class="note">Нейроголос вшит в приложение: интернет и ключи не нужны.</p>
+                    </div>
+
+                    <div class="field">
+                      <label for="ttsSpeed">Скорость речи: <b id="ttsSpeedValue">100%</b></label>
+                      <input type="range" class="range" id="ttsSpeed" min="50" max="200" step="5" />
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <label for="ttsVolume">Громкость: <b id="ttsVolumeValue">100%</b></label>
+                    <input type="range" class="range" id="ttsVolume" min="0" max="100" step="5" />
+                  </div>
+
+                  <div class="tg">
+                    <div><div class="t">Озвучивать имя автора</div><div class="s">«Ник говорит: текст»</div></div>
+                    <label class="sw"><input type="checkbox" id="speakUsername" /><span></span></label>
+                  </div>
+                  <div class="tg">
+                    <div><div class="t">Озвучивать подписки</div><div class="s">«Ник подписался!»</div></div>
+                    <label class="sw"><input type="checkbox" id="speakFollows" /><span></span></label>
+                  </div>
+                  <div class="tg">
+                    <div><div class="t">Озвучивать подарки</div><div class="s">Итог серии, без комбо-спама</div></div>
+                    <label class="sw"><input type="checkbox" id="speakGifts" /><span></span></label>
+                  </div>
+                </div>
+
+                <!-- Фильтры -->
+                <div class="card wide" id="set-filters">
+                  <h2><svg viewBox="0 0 24 24"><path d="M3 5h18M6 12h12M10 19h4"/></svg>Фильтры озвучки</h2>
+
+                  <div class="tg">
+                    <div><div class="t">Фильтровать сообщения перед озвучкой</div><div class="s">В чате и оверлее они остаются видимыми</div></div>
+                    <label class="sw"><input type="checkbox" id="prefixFilterEnabled" /><span></span></label>
+                  </div>
+
+                  <div class="three">
+                    <div class="field">
+                      <label>Игнорируемые префиксы</label>
+                      <div class="tagbox" id="prefixBox"><input placeholder="Добавить и Enter" /></div>
+                    </div>
+                    <div class="field">
+                      <label>Игнорируемые пользователи (боты)</label>
+                      <div class="tagbox" id="usersBox"><input placeholder="Добавить и Enter" /></div>
+                    </div>
+                    <div class="field">
+                      <label>Игнорируемые слова и фразы</label>
+                      <div class="tagbox" id="phrasesBox"><input placeholder="Добавить и Enter" /></div>
+                    </div>
+                  </div>
+                  <p class="note">Сравнение без учёта регистра. Команды обрабатываются раньше фильтров.</p>
+
+                  <div class="field" style="margin-top:10px">
+                    <label>Полностью скрыть пользователей (нет в ленте и оверлее)</label>
+                    <div class="tagbox" id="hiddenBox"><input placeholder="Ник и Enter" /></div>
+                  </div>
+
+                  <div class="tg">
+                    <div><div class="t">Показывать эмоуты</div><div class="s">7TV, BTTV и FFZ вместо текста</div></div>
+                    <label class="sw"><input type="checkbox" id="emotesEnabled" /><span></span></label>
+                  </div>
+                  <div class="tg">
+                    <div><div class="t">Показывать аватары</div><div class="s">YouTube, Twitch и TikTok</div></div>
+                    <label class="sw"><input type="checkbox" id="avatarsEnabled" /><span></span></label>
+                  </div>
+                </div>
+
+                <!-- Зрители -->
+                <div class="card" id="set-viewers">
+                  <h2><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/></svg>Зрители</h2>
+
+                  <div class="tg">
+                    <div><div class="t">Считать зрителей</div><div class="s">Опрос раз в 30 секунд</div></div>
+                    <label class="sw"><input type="checkbox" id="viewersEnabled" /><span></span></label>
+                  </div>
+                  <div class="tg">
+                    <div><div class="t">Twitch</div><div class="s">Нужен Client ID на карточке площадки</div></div>
+                    <label class="sw"><input type="checkbox" id="viewersTwitch" /><span></span></label>
+                  </div>
+                  <div class="tg">
+                    <div><div class="t">YouTube</div><div class="s">Без OAuth — просмотры эфира</div></div>
+                    <label class="sw"><input type="checkbox" id="viewersYoutube" /><span></span></label>
+                  </div>
+                  <div class="tg">
+                    <div><div class="t">TikTok</div><div class="s">Приблизительно, из данных комнаты</div></div>
+                    <label class="sw"><input type="checkbox" id="viewersTiktok" /><span></span></label>
+                  </div>
+                </div>
+
+                <!-- Доступ и отправка -->
+                <div class="card" id="set-access">
+                  <h2><svg viewBox="0 0 24 24"><path d="M12 2 4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6z"/><path d="m9 12 2 2 4-4"/></svg>Доступ и отправка сообщений</h2>
+
+                  <div class="oauth-block">
+                    <div class="oauth-head"><img src="./twitch-logo.svg" alt="" /><span>Twitch</span></div>
+                    <p class="note" id="oauthTwitchStatus">Вход не выполнен</p>
+                    <div class="actions-row">
+                      <button class="btn primary" id="btnTwitchLogin">Войти через Twitch</button>
+                      <button class="btn ghost" id="btnTwitchLogout">Выйти</button>
+                    </div>
+                    <div class="device-code" id="twitchDeviceBox" hidden>
+                      Код: <b id="twitchDeviceCode">—</b> · подтвердите на
+                      <a href="https://www.twitch.tv/activate" data-external>twitch.tv/activate</a>
+                    </div>
+                    <p class="note">Используется Client ID с карточки площадок. Пароль вводится только на twitch.tv.</p>
+                  </div>
+
+                  <div class="oauth-block">
+                    <div class="oauth-head"><img src="./youtube-logo.svg" alt="" /><span>Google / YouTube</span></div>
+                    <p class="note">Ключи приложения уже встроены — достаточно нажать «Войти».</p>
+                    <p class="note" id="oauthGoogleStatus">Вход не выполнен</p>
+                    <div class="actions-row">
+                      <button class="btn primary" id="btnGoogleLogin">Войти через Google</button>
+                      <button class="btn ghost" id="btnGoogleLogout">Выйти</button>
+                    </div>
+                  </div>
+
+                  <details class="advanced">
+                    <summary>Продвинутые настройки: свои OAuth-ключи</summary>
+                    <p class="note">По умолчанию используются встроенные ключи приложения — трогать эти поля не нужно.</p>
+
+                    <div class="field">
+                      <label for="twitchClientId">Twitch Client ID</label>
+                      <input type="text" class="input" id="twitchClientId" placeholder="xxxxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                      <label for="twitchClientSecret">Twitch Client Secret</label>
+                      <input type="password" class="input" id="twitchClientSecret" placeholder="нужен только для приложения типа Confidential" autocomplete="off" />
+                    </div>
+                    <p class="note">Если Twitch-приложение создано как Confidential, без Client Secret не обновляется токен. Можно оставить пустым для Public-приложения.</p>
+
+                    <div class="field">
+                      <label for="googleClientId">Google OAuth Client ID</label>
+                      <input type="text" class="input" id="googleClientId" placeholder="…apps.googleusercontent.com" autocomplete="off" />
+                    </div>
+                    <div class="field">
+                      <label for="googleClientSecret">Google OAuth Client Secret</label>
+                      <input type="password" class="input" id="googleClientSecret" placeholder="GOCSPX-…" autocomplete="off" />
+                    </div>
+                    <p class="note">Свой клиент должен иметь тип «Desktop app» и включённый YouTube Data API v3.</p>
+                  </details>
+                </div>
+
+                <!-- Команды -->
+                <div class="card wide" id="set-commands">
+                  <h2><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>Кастомные команды</h2>
+                  <div class="commands" id="commandsBody"></div>
+                  <div class="cmd-new">
+                    <input type="text" class="input" id="newTrigger" placeholder="!команда" />
+                    <input type="text" class="input" id="newResponse" placeholder="Текст, который озвучит Speechify" />
+                    <input type="text" class="input" id="newDescription" placeholder="Описание" />
+                    <button class="btn primary" id="btnAddCommand">Добавить</button>
+                  </div>
+                </div>
+
+                <!-- Данные -->
+                <div class="card" id="set-data">
+                  <h2><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Данные</h2>
+                  <div class="field">
+                    <label>Файл настроек</label>
+                    <input type="text" class="input mono" id="configPath" readonly value="—" />
+                  </div>
+                  <div class="actions-row">
+                    <button class="btn" id="btnRevealConfig">Открыть папку</button>
+                    <button class="btn" id="btnExportConfig">Экспорт настроек</button>
+                    <button class="btn" id="btnImportConfig">Импорт настроек</button>
+                    <button class="btn ghost" id="btnTestSpeak">Проверить озвучку</button>
+                  </div>
+                  <p class="note">Изменения применяются сразу, но на диск попадают по кнопке «Сохранить» или при закрытии приложения. Рядом с config.json хранится резервная копия config.json.bak.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ─────────── О ПРОГРАММЕ ─────────── -->
+        <section id="page-about" class="page">
+          <div class="about-grid">
+            <div class="card about-card">
+              <div class="about-head">
+                <img src="./avatar-raw.png" alt="" />
+                <div>
+                  <div class="about-name">Aron Chat</div>
+                  <div class="about-line">Версия <b id="aboutVersion">1.9.0</b> · 2026</div>
+                  <div class="about-line dim">Разработчик: SGR (StreamRateGame)</div>
+                </div>
+              </div>
+              <p class="about-text">
+                Чат TikTok LIVE, Twitch и YouTube в одном окне, облачная озвучка Speechify,
+                оверлей для OBS и счётчики зрителей.
+              </p>
+            </div>
+
+            <div class="card">
+              <h2>Что умеет</h2>
+              <ul class="feature-list">
+                <li>Три чата в одной ленте с бейджами подписок и подарков.</li>
+                <li>Озвучка сообщений, подписок и подарков через Speechify.</li>
+                <li>Кастомные команды: на триггер озвучивается заготовленный ответ.</li>
+                <li>Фильтры: префиксы, боты, стоп-фразы.</li>
+                <li>Оверлей для OBS и счётчики зрителей Twitch, YouTube, TikTok.</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h2>Технологии</h2>
+              <ul class="feature-list">
+                <li>Electron 33, Node.js.</li>
+                <li>tiktok-live-connector, tmi.js, YouTube Data API v3.</li>
+                <li>Speechify API (simba) и WebSocket-оверлей.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="about-credit">
+            Сделали с любовью
+            <a href="https://arongames.by/" data-external>Aron</a>
+            и
+            <a href="https://www.deepseek.com/" data-external>Deepseek</a>
+          </div>
+        </section>
+      </main>
+
+      <!-- Полоса сохранения -->
+      <div class="savebar" id="savebar">
+        <span class="save-state" id="saveState"><i></i>Изменения применяются сразу</span>
+        <span class="saved-at" id="savedAt"></span>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="btnReset">Сбросить</button>
+        <button class="btn primary" id="btnSave">Сохранить</button>
+      </div>
+
+      <footer class="statusbar">
+        <b>TTS</b><span id="ttsStatus">Speechify · alexei · ru-RU</span>
+        <span class="sep"></span>
+        <span id="overlayStatus">Оверлей: —</span>
+        <div class="spacer"></div>
+        <span id="statusVersion">1.9.0</span>
+      </footer>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="wizard" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Первый запуск</h2>
+        <span class="modal-step" id="wizardStepLabel">Шаг 1 из 3</span>
+      </div>
+
+      <div class="wizard-step" data-step="1">
+        <h3>Чем озвучивать?</h3>
+        <p class="note">Piper работает офлайн и не требует ключей. Speechify — облако, нужен API-ключ.</p>
+        <label class="choice"><input type="radio" name="wizEngine" value="piper" checked /> Piper — офлайн</label>
+        <label class="choice"><input type="radio" name="wizEngine" value="speechify" /> Speechify — облако</label>
+        <label class="choice"><input type="radio" name="wizEngine" value="none" /> Пока выключить</label>
+      </div>
+
+      <div class="wizard-step" data-step="2" hidden>
+        <h3>Площадки</h3>
+        <div class="field"><label for="wizTiktok">TikTok — ник трансляции</label><input class="input" id="wizTiktok" placeholder="без @" /></div>
+        <div class="field"><label for="wizTwitch">Twitch — канал</label><input class="input" id="wizTwitch" placeholder="без #" /></div>
+        <div class="field"><label for="wizYoutube">YouTube — канал или @handle</label><input class="input" id="wizYoutube" placeholder="@arongames" /></div>
+      </div>
+
+      <div class="wizard-step" data-step="3" hidden>
+        <h3>Оверлеи для OBS</h3>
+        <p class="note">Добавьте в OBS два Browser Source с этими адресами.</p>
+        <div class="field"><label>Чат</label><input class="input mono" id="wizChatUrl" readonly /></div>
+        <div class="field"><label>Зрители</label><input class="input mono" id="wizViewersUrl" readonly /></div>
+        <p class="note">Позиции, масштаб и CSS — на вкладке «Виджеты».</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" id="wizardSkip">Пропустить</button>
+        <div class="spacer"></div>
+        <button class="btn primary" id="wizardNext">Далее</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

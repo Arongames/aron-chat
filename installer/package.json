@@ -1,0 +1,36 @@
+{
+  "name": "aron-chat-installer",
+  "version": "1.10.17",
+  "description": "Aron Chat — установщик",
+  "author": {
+    "name": "SGR (StreamRateGame)",
+    "url": "https://arongames.by/"
+  },
+  "main": "main.js",
+  "build": {
+    "appId": "com.streamer.multichat.installer",
+    "productName": "Aron Chat Setup",
+    "electronVersion": "33.4.11",
+    "artifactName": "Aron Chat Setup ${version}.${ext}",
+    "directories": {
+      "output": "../dist-setup"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "style.css",
+      "renderer.js",
+      "terms.txt",
+      "assets/**/*",
+      "fonts/**/*"
+    ],
+    "extraResources": [
+      { "from": "payload.7z", "to": "payload.7z" },
+      { "from": "7za.exe", "to": "7za.exe" }
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": ["portable"]
+    }
+  }
+}
