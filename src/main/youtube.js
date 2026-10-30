@@ -499,6 +499,16 @@ class YouTubeChat extends EventEmitter {
     this.refreshAccessToken = typeof refreshAccessToken === 'function' ? refreshAccessToken : null;
     this.autoReconnect = autoReconnect !== false;
 
+    // Если токен не передали (например, не успел обновиться) — пробуем сами
+    if (!this.accessToken && this.refreshAccessToken) {
+      try {
+        const fresh = await this.refreshAccessToken();
+        if (fresh) this.accessToken = fresh;
+      } catch (err) {
+        this.lastError = `авторизация: ${err.message}`;
+      }
+    }
+
     const ref = YouTubeChat.normalizeChannelRef(channel);
     // Смена канала — сбрасываем кеш резолва
     if (ref && ref !== this.channelRef) {
