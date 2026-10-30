@@ -77,6 +77,7 @@ class YouTubeChat extends EventEmitter {
     this.quotaBlockedUntil = 0;
     this.lastError = null;
     this.innerChat = null;
+    this.seenMessageIds = new Set();
     this.innerLiveId = null;
   }
 
@@ -561,6 +562,7 @@ class YouTubeChat extends EventEmitter {
     this.liveChatId = stream.liveChatId || this.liveChatId;
     this.videoTitle = stream.title || this.videoTitle;
     this.pageToken = undefined;
+    this.seenMessageIds.clear();
     this.reconnectDelay = RECONNECT_DELAY;
     this.lastMessageAt = Date.now();
 
@@ -608,12 +610,20 @@ class YouTubeChat extends EventEmitter {
           pageToken: this.pageToken,
           maxResults: 200,
         });
-        this.pageToken = data.nextPageToken;
+        this.pageToken = data.nextPageToken || this.pageToken;
         if (data.pollingIntervalMillis) waitMs = data.pollingIntervalMillis;
 
         let received = 0;
         for (const item of data.items || []) {
           if (item.snippet.type !== 'textMessageEvent') continue;
+          if (item.id) {
+            if (this.seenMessageIds.has(item.id)) continue;
+            this.seenMessageIds.add(item.id);
+            if (this.seenMessageIds.size > 2000) {
+              const first = this.seenMessageIds.values().next().value;
+              this.seenMessageIds.delete(first);
+            }
+          }
           received += 1;
           this.lastMessageAt = Date.now();
           this.emit('message', {

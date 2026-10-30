@@ -1680,6 +1680,9 @@ $('btnUpdateLater').addEventListener('click', () => {
 });
 $('btnShowUpdateNotes').addEventListener('click', () => showUpdateModal(updateInfo));
 $('btnOpenLog').addEventListener('click', () => ipcRenderer.invoke('app:openLogFolder'));
+$('btnDonate').addEventListener('click', () => {
+  ipcRenderer.invoke('app:openExternal', 'https://www.donationalerts.com/r/arongames');
+});
 
 fillSelects();
 
