@@ -62,7 +62,15 @@ const sendToWindow = (channel, payload) => {
   }
 };
 
-const log = (entry) => sendToWindow('app:log', entry);
+const log = (entry) => {
+  sendToWindow('app:log', entry);
+  try {
+    const line = `[${new Date().toISOString()}] ${entry && entry.level || 'info'}: ${entry && entry.text || ''}\n`;
+    fs.appendFileSync(path.join(getConfigDir(), 'aron.log'), line, 'utf8');
+  } catch {
+    // лог не критичен для работы
+  }
+};
 
 // Сообщаем окну, что настройки изменились «сами» (подключение, эфир YouTube)
 function notifyConfig() {
@@ -734,6 +742,17 @@ function registerIpcHandlers() {
       persistConfig();
       notifyConfig();
       return { ok: true, config, file: filePaths[0] };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('app:openLogFolder', () => {
+    try {
+      const file = path.join(getConfigDir(), 'aron.log');
+      if (!fs.existsSync(file)) fs.writeFileSync(file, '', 'utf8');
+      shell.showItemInFolder(file);
+      return { ok: true, file };
     } catch (err) {
       return { ok: false, error: err.message };
     }

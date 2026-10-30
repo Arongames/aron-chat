@@ -269,8 +269,34 @@ function formatTime(ts) {
   return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 }
 
-function addChatMessage(msg) {
+// Свои отправленные сообщения показываем сразу, не дожидаясь ответа площадки.
+// Когда сервер пришлёт это же сообщение в чат, дубль отбрасываем.
+const pendingEchoes = [];
+
+function addLocalEcho(msg) {
+  pendingEchoes.push({
+    platform: msg.platform,
+    text: String(msg.text || ''),
+    until: Date.now() + 15000,
+  });
+  while (pendingEchoes.length > 30) pendingEchoes.shift();
+  addChatMessage(msg, true);
+}
+
+function consumeEcho(platform, text) {
+  const now = Date.now();
+  const value = String(text || '');
+  const index = pendingEchoes.findIndex((item) => item.until > now
+    && item.platform === platform
+    && item.text === value);
+  if (index === -1) return false;
+  pendingEchoes.splice(index, 1);
+  return true;
+}
+
+function addChatMessage(msg, local = false) {
   const platform = msg.platform || 'tiktok';
+  if (!local && consumeEcho(platform, msg.text)) return;
   const { row, av, nick, time, text, block } = makeRow(platform, 'chat');
 
   row.dataset.user = msg.user || '';
@@ -1463,14 +1489,24 @@ async function sendChatMessage() {
   }
 
   const btn = $('btnSendMessage');
+  const platform = $('sendPlatform').value;
   btn.disabled = true;
   const res = await ipcRenderer.invoke('chat:send', {
-    platform: $('sendPlatform').value,
+    platform,
     text,
   });
   btn.disabled = false;
 
   if (res.ok) {
+    const ownName = platform === 'youtube'
+      ? (state.config ? state.config.youtube_channel : '')
+      : (state.config && (state.config.twitch_login || state.config.twitch_channel)) || '';
+    addLocalEcho({
+      platform,
+      user: ownName || 'Вы',
+      text,
+      time: Date.now(),
+    });
     input.value = '';
     toast('Сообщение отправлено');
   } else {
@@ -1643,6 +1679,7 @@ $('btnUpdateLater').addEventListener('click', () => {
   closeUpdateModal();
 });
 $('btnShowUpdateNotes').addEventListener('click', () => showUpdateModal(updateInfo));
+$('btnOpenLog').addEventListener('click', () => ipcRenderer.invoke('app:openLogFolder'));
 
 fillSelects();
 

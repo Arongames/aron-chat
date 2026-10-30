@@ -611,8 +611,10 @@ class YouTubeChat extends EventEmitter {
         this.pageToken = data.nextPageToken;
         if (data.pollingIntervalMillis) waitMs = data.pollingIntervalMillis;
 
+        let received = 0;
         for (const item of data.items || []) {
           if (item.snippet.type !== 'textMessageEvent') continue;
+          received += 1;
           this.lastMessageAt = Date.now();
           this.emit('message', {
             platform: 'youtube',
@@ -624,6 +626,7 @@ class YouTubeChat extends EventEmitter {
             isSubscriber: !!item.authorDetails.isChatSponsor,
           });
         }
+        if (received) this.emit('log', `YouTube: получено ${received} сообщений`);
       } catch (err) {
         // Стрим завершился или чат закрыт -> ищем новый эфир
         if (this.isDeadChatError(err)) {
@@ -639,6 +642,7 @@ class YouTubeChat extends EventEmitter {
           continue;
         }
         this.noteApiError(err, 'liveChatMessages');
+        this.emit('log', `YouTube чат: ${err.message}${err.reason ? ` (${err.reason})` : ''}`);
         waitMs = this.quotaBlockedUntil > Date.now() ? QUOTA_BACKOFF / 5 : 10000;
       }
       await new Promise((r) => setTimeout(r, waitMs));
