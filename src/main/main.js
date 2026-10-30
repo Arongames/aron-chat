@@ -314,6 +314,7 @@ function syncViewers(force = false) {
   const signature = JSON.stringify([
     config.viewers_enabled, config.viewers_twitch, config.viewers_youtube,
     config.viewers_tiktok, config.twitch_channel, config.twitch_client_id,
+    config.twitch_access_token,
     config.youtube_video_id, config.youtube_api_key,
   ]);
   if (!force && signature === viewersSignature) return;
@@ -326,6 +327,7 @@ function syncViewers(force = false) {
     tiktok: config.viewers_tiktok !== false,
     twitchChannel: config.twitch_channel,
     twitchClientId: config.twitch_client_id,
+    twitchAccessToken: config.twitch_access_token,
     youtubeVideoId: config.youtube_video_id,
     youtubeApiKey: config.youtube_api_key,
     getTikTokCount: () => tiktok.fetchViewerCount(),
@@ -550,7 +552,14 @@ youtube.on('stream:changed', ({ videoId, reason }) => {
 });
 
 async function connectYouTube(params) {
-  await youtube.start(params);
+  // liveChatMessages требует OAuth, одного API-ключа недостаточно
+  let accessToken = null;
+  try {
+    accessToken = await ensureGoogleToken();
+  } catch (err) {
+    log({ level: 'error', text: `YouTube: ${err.message}` });
+  }
+  const result = await youtube.start({ ...params, accessToken });
   config = sanitize({
     ...config,
     youtube_channel: params.channel || config.youtube_channel,
@@ -559,6 +568,7 @@ async function connectYouTube(params) {
   });
   syncViewers();
   notifyConfig();
+  return result;
 }
 
 // ============================================================

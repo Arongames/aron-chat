@@ -30,6 +30,7 @@ class ViewersTracker extends EventEmitter {
       tiktok: true,
       twitchChannel: '',
       twitchClientId: '',
+      twitchAccessToken: '',
       youtubeVideoId: '',
       youtubeApiKey: '',
       getTikTokCount: null,
@@ -39,30 +40,70 @@ class ViewersTracker extends EventEmitter {
   }
 
   // ---------- Twitch ----------
-  async fetchTwitch() {
-    const { twitchChannel, twitchClientId } = this.params;
-    if (!twitchChannel || !twitchClientId) return null;
+  // Helix требует OAuth Bearer. Если токена нет или он истёк,
+  // берём число зрителей через публичный GQL-запрос (как веб-плеер).
+  async fetchTwitchGql(login) {
+    try {
+      const res = await fetch('https://gql.twitch.tv/gql', {
+        method: 'POST',
+        headers: {
+          'Client-ID': 'kimne78kx3ncx6brgo4mv6wki5h1ko',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: 'query($login:String!){user(login:$login){stream{viewersCount}}}',
+          variables: { login },
+        }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const stream = data && data.data && data.data.user && data.data.user.stream;
+      return stream ? Number(stream.viewersCount) || 0 : 0;
+    } catch {
+      return null;
+    }
+  }
 
-    const headers = { 'Client-ID': twitchClientId };
+  async fetchTwitch() {
+    const { twitchChannel, twitchClientId, twitchAccessToken } = this.params;
+    if (!twitchChannel) return null;
+
     const login = twitchChannel.toLowerCase().replace(/^#/, '');
 
-    const usersRes = await fetch(
-      `https://api.twitch.tv/helix/users?login=${encodeURIComponent(login)}`,
-      { headers }
-    );
-    if (!usersRes.ok) return null;
-    const usersData = await usersRes.json();
-    const userId = usersData.data && usersData.data[0] && usersData.data[0].id;
-    if (!userId) return null;
+    // 1. Официальный Helix, если есть и Client ID, и токен
+    if (twitchClientId && twitchAccessToken) {
+      try {
+        const headers = {
+          'Client-ID': twitchClientId,
+          Authorization: `Bearer ${twitchAccessToken}`,
+        };
 
-    const streamsRes = await fetch(
-      `https://api.twitch.tv/helix/streams?user_id=${encodeURIComponent(userId)}`,
-      { headers }
-    );
-    if (!streamsRes.ok) return null;
-    const streamsData = await streamsRes.json();
-    const stream = streamsData.data && streamsData.data[0];
-    return stream ? Number(stream.viewer_count) || 0 : 0;
+        const usersRes = await fetch(
+          `https://api.twitch.tv/helix/users?login=${encodeURIComponent(login)}`,
+          { headers }
+        );
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          const userId = usersData.data && usersData.data[0] && usersData.data[0].id;
+          if (userId) {
+            const streamsRes = await fetch(
+              `https://api.twitch.tv/helix/streams?user_id=${encodeURIComponent(userId)}`,
+              { headers }
+            );
+            if (streamsRes.ok) {
+              const streamsData = await streamsRes.json();
+              const stream = streamsData.data && streamsData.data[0];
+              return stream ? Number(stream.viewer_count) || 0 : 0;
+            }
+          }
+        }
+      } catch {
+        // переходим к GQL
+      }
+    }
+
+    // 2. GQL без авторизации
+    return this.fetchTwitchGql(login);
   }
 
   // ---------- YouTube ----------

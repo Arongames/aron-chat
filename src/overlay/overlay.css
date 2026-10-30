@@ -66,6 +66,8 @@ html, body {
 }
 .viewers[hidden] { display: none; }
 .v-item { display: inline-flex; align-items: center; gap: 5px; }
+.v-logo { width: calc(14px * var(--scale)); height: calc(14px * var(--scale)); object-fit: contain; }
+.v-name { display: none; }
 .v-item b { color: #dfe2e7; font-weight: 600; font-variant-numeric: tabular-nums; }
 .v-item i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 .p-yt { background: var(--yt); }

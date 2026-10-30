@@ -944,12 +944,38 @@ $('btnTtsTest').addEventListener('click', async () => {
 
 $('btnTestSpeak').addEventListener('click', () => $('btnTtsTest').click());
 
-ipcRenderer.on('tts:play', (_e, payload) => {
+// Очередь озвучки: следующий файл играет только после окончания предыдущего
+const ttsAudioQueue = [];
+let ttsAudioPlaying = false;
+
+function playNextTtsAudio() {
+  if (ttsAudioPlaying) return;
+  const payload = ttsAudioQueue.shift();
+  if (!payload) return;
+
+  ttsAudioPlaying = true;
   const src = payload.url || `file:///${String(payload.file).replace(/\\/g, '/')}`;
   const audio = new Audio(src);
   const volume = Number(state.config && state.config.tts_volume);
   audio.volume = Number.isFinite(volume) ? Math.min(1, Math.max(0, volume / 100)) : 1;
-  audio.play().catch((err) => toast(`Ошибка воспроизведения: ${err.message}`, true));
+
+  const finish = () => {
+    ttsAudioPlaying = false;
+    setTimeout(playNextTtsAudio, 80);
+  };
+
+  audio.addEventListener('ended', finish, { once: true });
+  audio.addEventListener('error', finish, { once: true });
+  audio.play().catch((err) => {
+    toast(`Ошибка воспроизведения: ${err.message}`, true);
+    finish();
+  });
+}
+
+ipcRenderer.on('tts:play', (_e, payload) => {
+  if (!payload || (!payload.url && !payload.file)) return;
+  ttsAudioQueue.push(payload);
+  playNextTtsAudio();
 });
 
 // ============================================================
