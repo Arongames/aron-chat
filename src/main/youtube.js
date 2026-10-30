@@ -57,6 +57,7 @@ class YouTubeChat extends EventEmitter {
     this.pageToken = undefined;
     this.apiKey = null;
     this.accessToken = null;
+    this.refreshAccessToken = null;
     this.autoReconnect = true;
 
     this.polling = false;      // основной цикл чтения чата активен
@@ -91,7 +92,20 @@ class YouTubeChat extends EventEmitter {
     const headers = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
 
-    const res = await fetch(url, { headers });
+    let res = await fetch(url, { headers });
+    // Токен мог истечь во время эфира — обновляем и повторяем один раз
+    if ((res.status === 401 || res.status === 403) && typeof this.refreshAccessToken === 'function') {
+      try {
+        const fresh = await this.refreshAccessToken();
+        if (fresh) {
+          this.accessToken = fresh;
+          headers.Authorization = `Bearer ${fresh}`;
+          res = await fetch(url, { headers });
+        }
+      } catch {
+        /* дальше отдадим исходную ошибку */
+      }
+    }
     let data = null;
     try {
       data = await res.json();
@@ -374,10 +388,11 @@ class YouTubeChat extends EventEmitter {
   // ============================================================
 
   // Вход: channel — стабильный канал; videoId — опциональный «прикол» вручную
-  async start({ channel, videoId, apiKey, accessToken, autoReconnect } = {}) {
+  async start({ channel, videoId, apiKey, accessToken, refreshAccessToken, autoReconnect } = {}) {
     this.running = true;
     this.apiKey = (apiKey || '').trim() || null;
     this.accessToken = (accessToken || '').trim() || null;
+    this.refreshAccessToken = typeof refreshAccessToken === 'function' ? refreshAccessToken : null;
     this.autoReconnect = autoReconnect !== false;
 
     const ref = YouTubeChat.normalizeChannelRef(channel);

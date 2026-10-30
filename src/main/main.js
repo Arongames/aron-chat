@@ -214,20 +214,37 @@ async function ensureGoogleToken() {
   if (!token) throw new Error('войдите через Google на вкладке «Доступ»');
   if (tokenExpiresSoon(config.google_token_expires_at)) {
     if (!config.google_refresh_token) throw new Error('токен Google истёк — войдите заново');
-    const fresh = await googleOAuth.refresh({
-      clientId: config.google_client_id,
-      clientSecret: config.google_client_secret,
-      refreshToken: config.google_refresh_token,
-    });
-    config = sanitize({
-      ...config,
-      google_access_token: fresh.accessToken,
-      google_refresh_token: fresh.refreshToken,
-      google_token_expires_at: Date.now() + fresh.expiresIn * 1000,
-    });
-    persistConfig();
-    notifyConfig();
-    token = fresh.accessToken;
+    try {
+      const fresh = await googleOAuth.refresh({
+        clientId: config.google_client_id,
+        clientSecret: config.google_client_secret,
+        refreshToken: config.google_refresh_token,
+      });
+      config = sanitize({
+        ...config,
+        google_access_token: fresh.accessToken,
+        google_refresh_token: fresh.refreshToken,
+        google_token_expires_at: Date.now() + fresh.expiresIn * 1000,
+      });
+      persistConfig();
+      notifyConfig();
+      token = fresh.accessToken;
+    } catch (err) {
+      // Если Google отозвал refresh token — сбрасываем вход,
+      // чтобы пользователь видел «Войти заново», а не пустой чат.
+      if (/invalid_grant|invalid_client|unauthorized_client/i.test(err.message)) {
+        config = sanitize({
+          ...config,
+          google_access_token: '',
+          google_refresh_token: '',
+          google_token_expires_at: 0,
+        });
+        persistConfig();
+        notifyConfig();
+        throw new Error('сессия Google истекла — войдите через Google заново');
+      }
+      throw err;
+    }
   }
   return token;
 }
@@ -559,7 +576,11 @@ async function connectYouTube(params) {
   } catch (err) {
     log({ level: 'error', text: `YouTube: ${err.message}` });
   }
-  const result = await youtube.start({ ...params, accessToken });
+  const result = await youtube.start({
+    ...params,
+    accessToken,
+    refreshAccessToken: () => ensureGoogleToken(),
+  });
   config = sanitize({
     ...config,
     youtube_channel: params.channel || config.youtube_channel,
