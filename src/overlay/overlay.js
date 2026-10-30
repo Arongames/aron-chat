@@ -64,6 +64,11 @@ function applySettings(next) {
     document.documentElement.style.setProperty('--chat-font', `${chat.fontSize || 13}px`);
     document.documentElement.style.setProperty('--plat-icon', `${chat.iconSize || 22}px`);
     document.body.classList.toggle('hide-plat-icons', chat.showIcons === false);
+    wrapEl.classList.toggle('custom', chat.custom === true);
+    if (chat.custom) {
+      document.documentElement.style.setProperty('--chat-x', `${Number(chat.x) || 50}%`);
+      document.documentElement.style.setProperty('--chat-y', `${Number(chat.y) || 50}%`);
+    }
     trimFeed();
   }
   renderViewers(lastViewers);

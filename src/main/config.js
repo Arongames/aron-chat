@@ -140,6 +140,16 @@ const DEFAULT_CONFIG = {
   speak_donations: true,
   // Площадка для отправки сообщений из нижней панели
   send_platform: 'twitch',
+  // Автосообщения по таймеру
+  auto_messages_enabled: false,
+  auto_messages_platform: 'twitch',
+  auto_messages_interval: 15,
+  auto_messages_min_chat: 3,
+  auto_messages: [],
+  // Свободное положение чат-оверлея (редактор)
+  overlay_chat_custom: false,
+  overlay_chat_x: 50,
+  overlay_chat_y: 50,
   // Кастомные команды
   custom_commands: [
     {
@@ -364,6 +374,20 @@ function sanitize(config) {
   out.donationalerts_token_expires_at = Number(out.donationalerts_token_expires_at) || 0;
   out.donationalerts_last_id = Number(out.donationalerts_last_id) || 0;
   out.speak_donations = out.speak_donations !== false;
+
+  out.auto_messages_enabled = out.auto_messages_enabled === true;
+  out.auto_messages_platform = ['twitch', 'youtube'].includes(out.auto_messages_platform)
+    ? out.auto_messages_platform
+    : 'twitch';
+  out.auto_messages_interval = Math.min(180, Math.max(1, Number(out.auto_messages_interval) || 15));
+  out.auto_messages_min_chat = Math.min(100, Math.max(0, Number(out.auto_messages_min_chat) || 0));
+  out.auto_messages = (Array.isArray(out.auto_messages) ? out.auto_messages : [])
+    .map((v) => String(v || '').trim())
+    .filter(Boolean)
+    .slice(0, 30);
+  out.overlay_chat_custom = out.overlay_chat_custom === true;
+  out.overlay_chat_x = Math.min(100, Math.max(0, Number(out.overlay_chat_x) || 50));
+  out.overlay_chat_y = Math.min(100, Math.max(0, Number(out.overlay_chat_y) || 50));
   out.google_token_expires_at = Number(out.google_token_expires_at) || 0;
 
   out.send_platform = ['twitch', 'youtube'].includes(out.send_platform)

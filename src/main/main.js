@@ -52,6 +52,8 @@ const donationOAuth = require('./donationalerts_oauth');
 const createOverlayServer = require('./server');
 
 let mainWindow = null;
+let miniMode = false;
+let normalBounds = null;
 
 // Текущее состояние настроек (может содержать ещё не сохранённые правки)
 let config = loadConfig();
@@ -113,6 +115,9 @@ function overlaySettings(cfg = config) {
       iconSize: cfg.platform_icon_size,
       showIcons: cfg.show_platform_icons !== false,
       language: cfg.ui_language || 'ru',
+      custom: cfg.overlay_chat_custom === true,
+      x: cfg.overlay_chat_x,
+      y: cfg.overlay_chat_y,
     },
     viewers: {
       enabled: cfg.overlay_viewers_enabled !== false,
@@ -525,6 +530,7 @@ function twitchAvatar(login) {
 function handleChatMessage({ platform, user, text, color, isMod, isSubscriber, avatar, login, silent }) {
   const clean = String(text || '').trim();
   if (!clean) return;
+  chatActivity += 1;
 
   // Полностью скрытые пользователи не попадают ни в ленту, ни в оверлей
   const lowerUser = String(user || '').toLowerCase();
@@ -735,6 +741,94 @@ async function applyRuntime(prev) {
   } else {
     stopDonationPolling();
   }
+
+  if (config.auto_messages_enabled === true) startAutoMessages();
+  else stopAutoMessages();
+}
+
+// ============================================================
+// Автосообщения по таймеру
+// ============================================================
+let autoMessageTimer = null;
+let autoMessageIndex = 0;
+let autoMessageLastAt = 0;
+let chatActivity = 0;
+
+async function autoMessageTick() {
+  if (config.auto_messages_enabled !== true) return;
+  const messages = Array.isArray(config.auto_messages) ? config.auto_messages : [];
+  if (!messages.length) return;
+
+  const intervalMs = Math.max(1, Number(config.auto_messages_interval) || 15) * 60000;
+  if (Date.now() - autoMessageLastAt < intervalMs) return;
+  if (chatActivity < (Number(config.auto_messages_min_chat) || 0)) return;
+
+  const text = messages[autoMessageIndex % messages.length];
+  autoMessageIndex += 1;
+  autoMessageLastAt = Date.now();
+  chatActivity = 0;
+
+  try {
+    await sendPlatformMessage(config.auto_messages_platform || 'twitch', text);
+    log({ level: 'info', text: `Автосообщение: ${text}` });
+  } catch (err) {
+    log({ level: 'error', text: `Автосообщение: ${err.message}` });
+  }
+}
+
+function startAutoMessages() {
+  if (autoMessageTimer) return;
+  autoMessageLastAt = Date.now();
+  autoMessageTimer = setInterval(autoMessageTick, 30000);
+}
+
+function stopAutoMessages() {
+  if (autoMessageTimer) {
+    clearInterval(autoMessageTimer);
+    autoMessageTimer = null;
+  }
+}
+
+// ============================================================
+// Отправка в чат площадки (ручная и автосообщения)
+// ============================================================
+async function sendPlatformMessage(platform, text) {
+  if (platform === 'twitch') {
+    const token = await ensureTwitchToken();
+    const profile = await twitchAssets.profile(config.twitch_channel);
+    if (!profile || !profile.id) throw new Error('не удалось определить канал Twitch');
+    if (!config.twitch_user_id) throw new Error('нет данных пользователя — войдите заново');
+
+    await twitchOAuth.sendMessage({
+      accessToken: token,
+      clientId: config.twitch_client_id,
+      broadcasterId: profile.id,
+      senderId: config.twitch_user_id,
+      message: text,
+    });
+    log({ level: 'info', text: `Отправлено в Twitch: ${text}` });
+    return;
+  }
+
+  if (platform === 'youtube') {
+    const token = await ensureGoogleToken();
+    if (!youtube.liveChatId) throw new Error('чат YouTube не подключён');
+    if (String(youtube.liveChatId).startsWith('innertube:')) {
+      throw new Error(
+        'YouTube: чат читается в резервном режиме — отправка недоступна, '
+        + 'пока не восстановится квота YouTube API'
+      );
+    }
+    await googleOAuth.sendMessage({
+      accessToken: token,
+      liveChatId: youtube.liveChatId,
+      message: text,
+    });
+    log({ level: 'info', text: `Отправлено в YouTube: ${text}` });
+    return;
+  }
+
+  throw new Error('отправка в эту площадку не поддерживается');
 }
 
 // ============================================================
@@ -1250,42 +1344,8 @@ Start-Process -FilePath ${quote(appExe)}
     if (!text) return { ok: false, error: 'пустое сообщение' };
 
     try {
-      if (platform === 'twitch') {
-        const token = await ensureTwitchToken();
-        const profile = await twitchAssets.profile(config.twitch_channel);
-        if (!profile || !profile.id) throw new Error('не удалось определить канал Twitch');
-        if (!config.twitch_user_id) throw new Error('нет данных пользователя — войдите заново');
-
-        await twitchOAuth.sendMessage({
-          accessToken: token,
-          clientId: config.twitch_client_id,
-          broadcasterId: profile.id,
-          senderId: config.twitch_user_id,
-          message: text,
-        });
-        log({ level: 'info', text: `Отправлено в Twitch: ${text}` });
-        return { ok: true };
-      }
-
-      if (platform === 'youtube') {
-        const token = await ensureGoogleToken();
-        if (!youtube.liveChatId) throw new Error('чат YouTube не подключён');
-        if (String(youtube.liveChatId).startsWith('innertube:')) {
-          throw new Error(
-            'YouTube: чат читается в резервном режиме — отправка недоступна, '
-            + 'пока не восстановится квота YouTube API'
-          );
-        }
-        await googleOAuth.sendMessage({
-          accessToken: token,
-          liveChatId: youtube.liveChatId,
-          message: text,
-        });
-        log({ level: 'info', text: `Отправлено в YouTube: ${text}` });
-        return { ok: true };
-      }
-
-      throw new Error('отправка в эту площадку не поддерживается');
+      await sendPlatformMessage(platform, text);
+      return { ok: true };
     } catch (err) {
       let message = err.message;
       if (/user:write:chat/i.test(message)) {
@@ -1426,6 +1486,24 @@ Start-Process -FilePath ${quote(appExe)}
     else mainWindow.maximize();
     sendToWindow('window:maximized', { maximized: mainWindow.isMaximized() });
   });
+  ipcMain.handle('window:mini', () => {
+    if (!mainWindow) return { mini: miniMode };
+    if (!miniMode) {
+      normalBounds = mainWindow.getBounds();
+      miniMode = true;
+      mainWindow.setAlwaysOnTop(true);
+      mainWindow.setMinimumSize(320, 280);
+      mainWindow.setSize(430, 560);
+      mainWindow.setResizable(true);
+    } else {
+      miniMode = false;
+      mainWindow.setAlwaysOnTop(false);
+      mainWindow.setMinimumSize(560, 420);
+      if (normalBounds) mainWindow.setBounds(normalBounds);
+    }
+    return { mini: miniMode };
+  });
+
   ipcMain.on('window:close', () => mainWindow.close());
 
   ipcMain.handle('status:get', () => ({
@@ -1541,6 +1619,7 @@ if (!gotLock) {
     if (config.donationalerts_access_token && config.donationalerts_enabled !== false) {
       startDonationPolling();
     }
+    if (config.auto_messages_enabled === true) startAutoMessages();
 
     // Эмоуты грузим сразу по сохранённому каналу, не дожидаясь коннекта чата
     if (config.twitch_channel && config.emotes_enabled !== false) {

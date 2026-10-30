@@ -265,3 +265,13 @@ body[data-widget="viewers"] .v-item i {
   margin: 0 1px;
   object-fit: contain;
 }
+
+/* Свободное положение из редактора */
+.wrap.custom {
+  left: var(--chat-x, 50%);
+  top: var(--chat-y, 50%);
+  right: auto;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+  justify-content: flex-end;
+}

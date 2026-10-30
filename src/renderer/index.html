@@ -120,6 +120,9 @@
               <div class="seg">
                 <button class="on" id="segScroll">Автопрокрутка</button>
               </div>
+              <button class="icon-btn" id="btnMini" title="Мини-режим">
+                <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 21h5v-5M3 8l6-6M21 16l-6 6"/></svg>
+              </button>
               <button class="icon-btn" id="btnClearChat" title="Очистить ленту">
                 <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
               </button>
@@ -232,6 +235,22 @@
               </div>
             </div>
 
+            <!-- Редактор оверлея -->
+            <div class="card" style="grid-column:1/-1">
+              <h2><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 9v12"/></svg>Редактор оверлея</h2>
+              <p class="note">Перетащите блок «Чат» по сетке 16:9. Положение сохраняется в настройках и сразу применяется к оверлею.</p>
+              <div class="oe-canvas" id="oeCanvas">
+                <div class="oe-block" id="oeBlock">
+                  <span class="oe-title">Чат</span>
+                  <span class="oe-sub">сообщения</span>
+                </div>
+              </div>
+              <div class="actions-row">
+                <button class="btn ghost" id="btnOeReset">Сбросить положение</button>
+                <span class="note" id="oeHint">центр</span>
+              </div>
+            </div>
+
             <!-- Виджет 2: зрители -->
             <div class="card">
               <h2><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9"/></svg>Оверлей зрителей</h2>
@@ -328,6 +347,7 @@
               <button data-scroll="set-viewers">Зрители</button>
               <button data-scroll="set-access">Доступ</button>
               <button data-scroll="set-commands">Команды</button>
+              <button data-scroll="set-auto">Автосообщения</button>
               <button data-scroll="set-data">Данные</button>
             </nav>
 
@@ -663,6 +683,35 @@
                     <input type="text" class="input" id="newDescription" placeholder="Описание" />
                     <button class="btn primary" id="btnAddCommand">Добавить</button>
                   </div>
+                </div>
+
+                <!-- Автосообщения -->
+                <div class="card wide" id="set-auto">
+                  <h2><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Автосообщения</h2>
+                  <div class="tg">
+                    <div><div class="t">Отправлять по таймеру</div><div class="s">Сообщения в чат площадки без участия стримера</div></div>
+                    <label class="sw"><input type="checkbox" id="autoMessagesEnabled" /><span></span></label>
+                  </div>
+                  <div class="field">
+                    <label for="autoMessagesPlatform">Площадка</label>
+                    <select class="input" id="autoMessagesPlatform">
+                      <option value="twitch">Twitch</option>
+                      <option value="youtube">YouTube</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="autoMessagesInterval">Интервал, минут</label>
+                    <input type="number" class="input" id="autoMessagesInterval" min="1" max="180" step="1" />
+                  </div>
+                  <div class="field">
+                    <label for="autoMessagesMinChat">Минимум сообщений в чате перед отправкой</label>
+                    <input type="number" class="input" id="autoMessagesMinChat" min="0" max="100" step="1" />
+                  </div>
+                  <div class="field">
+                    <label for="autoMessagesList">Сообщения — по одному в строке</label>
+                    <textarea class="input" id="autoMessagesList" rows="6" placeholder="Подпишитесь на канал!&#10;Не забудьте про донат!"></textarea>
+                  </div>
+                  <p class="note">Сообщения идут по кругу. Если в чате тихо, отправка ждёт активности. Для YouTube нужен OAuth и подключённый чат.</p>
                 </div>
 
                 <!-- Данные -->

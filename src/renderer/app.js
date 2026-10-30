@@ -74,6 +74,7 @@ const SETTINGS_CARDS = [
   'set-viewers',
   'set-access',
   'set-commands',
+  'set-auto',
   'set-data',
 ];
 
@@ -446,6 +447,13 @@ $('segScroll').addEventListener('click', (e) => {
   }
 });
 
+$('btnMini').addEventListener('click', async () => {
+  const res = await ipcRenderer.invoke('window:mini');
+  const mini = !!(res && res.mini);
+  document.body.classList.toggle('mini', mini);
+  if (mini) showPage('chat');
+});
+
 $('btnClearChat').addEventListener('click', clearChat);
 $('btnClearEvents').addEventListener('click', () => {
   $('eventsLog').innerHTML = '';
@@ -670,6 +678,12 @@ function applyConfigToUI() {
   $('googleClientSecret').value = c.google_client_secret || '';
   $('daClientId').value = c.donationalerts_client_id || '';
   $('daClientSecret').value = c.donationalerts_client_secret || '';
+  $('autoMessagesEnabled').checked = c.auto_messages_enabled === true;
+  $('autoMessagesPlatform').value = c.auto_messages_platform || 'twitch';
+  $('autoMessagesInterval').value = c.auto_messages_interval || 15;
+  $('autoMessagesMinChat').value = c.auto_messages_min_chat ?? 3;
+  $('autoMessagesList').value = (c.auto_messages || []).join('\n');
+  oeApply(c);
   $('ttsEngine').value = c.tts_engine || 'speechify';
   $('piperVoice').value = c.piper_voice || 'dmitri';
   $('ttsSpeed').value = c.tts_speed;
@@ -962,6 +976,16 @@ $('uiLanguage').addEventListener('change', () => {
 bindCheck('updateAutoCheck', 'update_check_enabled');
 bindCheck('daEnabled', 'donationalerts_enabled');
 bindCheck('speakDonations', 'speak_donations');
+bindCheck('autoMessagesEnabled', 'auto_messages_enabled');
+bindNumber('autoMessagesInterval', 'auto_messages_interval', 1, 180);
+bindNumber('autoMessagesMinChat', 'auto_messages_min_chat', 0, 100);
+$('autoMessagesPlatform').addEventListener('change', () => {
+  stage({ auto_messages_platform: $('autoMessagesPlatform').value }, true);
+});
+$('autoMessagesList').addEventListener('input', () => {
+  const list = $('autoMessagesList').value.split(/\r?\n/).map((v) => v.trim()).filter(Boolean);
+  stage({ auto_messages: list }, true);
+});
 bindText('updateManifestUrl', 'update_manifest_url', (v) => v.trim());
 bindNumber('overlayViewersScale', 'overlay_viewers_scale', 60, 200);
 
@@ -1830,3 +1854,71 @@ ipcRenderer.invoke('status:get').then((s) => {
   if (s.overlay) updateOverlayUI(s.overlay);
   if (s.viewers) renderViewers(s.viewers);
 });
+
+// ---------- Редактор оверлея: перетаскивание блока ----------
+function oeApply(config) {
+  const block = document.getElementById('oeBlock');
+  const hint = document.getElementById('oeHint');
+  if (!block) return;
+  const custom = config && config.overlay_chat_custom === true;
+  const x = custom ? Number(config.overlay_chat_x) : 50;
+  const y = custom ? Number(config.overlay_chat_y) : 50;
+  block.style.left = `${Number.isFinite(x) ? x : 50}%`;
+  block.style.top = `${Number.isFinite(y) ? y : 50}%`;
+  if (hint) hint.textContent = custom ? `${Math.round(x)}% / ${Math.round(y)}%` : 'центр';
+}
+
+(function initOverlayEditor() {
+  const canvas = document.getElementById('oeCanvas');
+  const block = document.getElementById('oeBlock');
+  if (!canvas || !block) return;
+
+  let dragging = false;
+  let lastSent = 0;
+
+  const move = (event) => {
+    if (!dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.min(95, Math.max(5, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(95, Math.max(5, ((event.clientY - rect.top) / rect.height) * 100));
+    block.style.left = `${x}%`;
+    block.style.top = `${y}%`;
+    const hint = document.getElementById('oeHint');
+    if (hint) hint.textContent = `${Math.round(x)}% / ${Math.round(y)}%`;
+    const now = Date.now();
+    if (now - lastSent > 80) {
+      lastSent = now;
+      stage({ overlay_chat_custom: true, overlay_chat_x: Math.round(x), overlay_chat_y: Math.round(y) }, true);
+    }
+  };
+
+  block.addEventListener('pointerdown', (event) => {
+    dragging = true;
+    block.classList.add('dragging');
+    block.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  block.addEventListener('pointermove', move);
+  block.addEventListener('pointerup', (event) => {
+    if (!dragging) return;
+    move(event);
+    dragging = false;
+    block.classList.remove('dragging');
+    const x = Number.parseFloat(block.style.left) || 50;
+    const y = Number.parseFloat(block.style.top) || 50;
+    stage({ overlay_chat_custom: true, overlay_chat_x: Math.round(x), overlay_chat_y: Math.round(y) }, true);
+    try { block.releasePointerCapture(event.pointerId); } catch { /* уже отпущен */ }
+  });
+  block.addEventListener('pointercancel', () => {
+    dragging = false;
+    block.classList.remove('dragging');
+  });
+
+  const reset = document.getElementById('btnOeReset');
+  if (reset) {
+    reset.addEventListener('click', () => {
+      oeApply({ overlay_chat_custom: false });
+      stage({ overlay_chat_custom: false, overlay_chat_x: 50, overlay_chat_y: 50 }, true);
+    });
+  }
+})();

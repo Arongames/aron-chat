@@ -22,6 +22,18 @@
     'Проверяю…': 'Checking…',
     'Откройте браузер и подтвердите доступ Google': 'Open the browser and confirm Google access',
     'Откройте браузер и подтвердите доступ DonationAlerts': 'Open the browser and confirm DonationAlerts access',
+    'Автосообщения': 'Auto messages',
+    'Отправлять по таймеру': 'Send on timer',
+    'Сообщения в чат площадки без участия стримера': 'Messages to platform chat without the streamer',
+    'Площадка': 'Platform',
+    'Интервал, минут': 'Interval, minutes',
+    'Минимум сообщений в чате перед отправкой': 'Minimum chat messages before sending',
+    'Сообщения — по одному в строке': 'Messages — one per line',
+    'Пресеты вида': 'Appearance presets',
+    'Редактор оверлея': 'Overlay editor',
+    'Сбросить положение': 'Reset position',
+    'центр': 'center',
+    'Мини-режим': 'Mini mode',
     'Настройки': 'Settings',
     'ключ не задан': 'key not set',
     'Проверить озвучку': 'Test voice',
@@ -234,6 +246,7 @@
     'Префикс': 'Prefix',
     'Сообщение в чат площадки — Enter': 'Message to platform chat — Enter',
     'Куда отправить': 'Where to send',
+    'Мини-режим': 'Mini mode',
   };
   const ATTR_EN_TO_RU = Object.fromEntries(
     Object.entries(ATTR_RU_TO_EN).map(([ru, en]) => [en, ru])
