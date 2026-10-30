@@ -1736,6 +1736,7 @@ async function downloadAndInstallUpdate() {
     const res = await ipcRenderer.invoke('update:download', {
       url: updateInfo.url,
       version: updateInfo.latest,
+      sha256: updateInfo.sha256 || '',
     });
     if (!res || !res.ok) {
       toast(`Не удалось скачать обновление: ${res ? res.error : 'ошибка'}`, true);

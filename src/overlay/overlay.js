@@ -42,12 +42,17 @@ let socket = null;
 let reconnectDelay = 1000;
 let lastViewers = {};
 let emotes = {};
+let LANG = 'ru';
 
 // ---------- Настройки ----------
 function applySettings(next) {
   if (!next) return;
   if (next.chat) chat = { ...chatDefaults, ...next.chat };
   if (next.viewers) viewersCfg = { ...viewersDefaults, ...next.viewers };
+
+  if (next.chat && next.chat.language) LANG = next.chat.language === 'en' ? 'en' : 'ru';
+  const title = document.querySelector('.v-title');
+  if (title) title.textContent = LANG === 'en' ? 'Viewers' : 'Зрители';
 
   if (MODE === 'viewers') {
     wrapEl.className = `wrap pos-${viewersCfg.position}`;
@@ -215,11 +220,24 @@ const EVENT_LABELS = {
   donation: { badge: 'donation', verb: 'донат', cls: 'gift' },
 };
 
+const EVENT_LABELS_EN = {
+  follow: { badge: 'follow', verb: 'followed', cls: 'follow' },
+  sub: { badge: 'sub', verb: 'subscribed', cls: 'sub' },
+  gift: { badge: 'gift', verb: 'sent a gift', cls: 'gift' },
+  member: { badge: 'in', verb: 'joined', cls: 'follow' },
+  like: { badge: 'like', verb: 'liked', cls: 'like' },
+  donation: { badge: 'donation', verb: 'donated', cls: 'gift' },
+};
+
+function eventLabels() {
+  return LANG === 'en' ? EVENT_LABELS_EN : EVENT_LABELS;
+}
+
 function renderEvent(evt) {
   if (!chat.showEvents) return;
   // Входы в эфир слишком частые — в оверлее не показываем
   if (evt.type === 'member') return;
-  const meta = EVENT_LABELS[evt.type];
+  const meta = eventLabels()[evt.type];
   if (!meta) return;
 
   // Лайки TikTok: одна строка на зрителя, счётчик обновляется

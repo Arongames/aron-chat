@@ -26,6 +26,7 @@
 const { app, BrowserWindow, ipcMain, Menu, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const os = require('os');
 
 const {
@@ -110,6 +111,7 @@ function overlaySettings(cfg = config) {
       fontSize: cfg.chat_font_size,
       iconSize: cfg.platform_icon_size,
       showIcons: cfg.show_platform_icons !== false,
+      language: cfg.ui_language || 'ru',
     },
     viewers: {
       enabled: cfg.overlay_viewers_enabled !== false,
@@ -869,6 +871,7 @@ function registerIpcHandlers() {
   ipcMain.handle('update:download', async (_event, payload = {}) => {
     const url = String(payload.url || '');
     const version = String(payload.version || '').replace(/[^\w.-]/g, '') || 'latest';
+    const expectedSha = String(payload.sha256 || '').toLowerCase();
     if (!/^https:\/\//i.test(url)) return { ok: false, error: 'разрешены только https-ссылки' };
 
     const file = path.join(os.tmpdir(), `AronChat-Setup-${version}.exe`);
@@ -880,6 +883,7 @@ function registerIpcHandlers() {
 
       const total = Number(res.headers.get('content-length')) || 0;
       const out = fs.createWriteStream(file);
+      const hash = crypto.createHash('sha256');
       const reader = res.body.getReader();
       let received = 0;
 
@@ -888,6 +892,7 @@ function registerIpcHandlers() {
         if (done) break;
         const chunk = Buffer.from(value);
         received += chunk.length;
+        hash.update(chunk);
         if (!out.write(chunk)) {
           await new Promise((resolve) => out.once('drain', resolve));
         }
@@ -901,7 +906,13 @@ function registerIpcHandlers() {
       await new Promise((resolve, reject) => {
         out.end((err) => (err ? reject(err) : resolve()));
       });
-      return { ok: true, file, size: received };
+
+      const actualSha = hash.digest('hex');
+      if (expectedSha && actualSha !== expectedSha) {
+        try { fs.unlinkSync(file); } catch { /* нет файла */ }
+        throw new Error('SHA-256 установщика не совпал с релизом');
+      }
+      return { ok: true, file, size: received, sha256: actualSha };
     } catch (err) {
       try { fs.unlinkSync(file); } catch { /* нет файла */ }
       return { ok: false, error: err.message };
@@ -953,6 +964,7 @@ function registerIpcHandlers() {
       let download = '';
       let publishedAt = '';
       let assetName = '';
+      let sha256 = '';
 
       // GitHub Releases API
       if (data && (data.tag_name || (data.name && data.assets))) {
@@ -965,6 +977,8 @@ function registerIpcHandlers() {
         if (setup) {
           download = setup.browser_download_url || '';
           assetName = setup.name || '';
+          const digest = String(setup.digest || '');
+          if (/^sha256:[a-f0-9]{64}$/i.test(digest)) sha256 = digest.slice(7).toLowerCase();
         }
       } else {
         // Свой latest.json
@@ -984,6 +998,7 @@ function registerIpcHandlers() {
         notes,
         url: download,
         assetName,
+        sha256,
         publishedAt,
       };
     } catch (err) {
