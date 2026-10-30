@@ -49,6 +49,50 @@ function defaultInstallDir() {
   return path.join(base, 'Programs', 'Aron Chat');
 }
 
+// Ищем уже установленную копию, чтобы при обновлении подставить её папку.
+// Источники: записи Uninstall в реестре, запущенный процесс, типовые пути.
+async function detectInstallDir() {
+  const fallback = defaultInstallDir();
+  const script = `
+$ErrorActionPreference = 'SilentlyContinue'
+$paths = New-Object System.Collections.Generic.List[string]
+$keys = @(
+  'HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+  'HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'
+)
+foreach ($k in $keys) {
+  Get-ItemProperty $k | Where-Object { $_.DisplayName -like 'Aron Chat*' -and $_.InstallLocation } | ForEach-Object {
+    $paths.Add([string]$_.InstallLocation)
+  }
+}
+Get-CimInstance Win32_Process -Filter "Name='Aron Chat.exe' OR Name='Aron Chat Lite.exe'" | ForEach-Object {
+  if ($_.ExecutablePath) { $paths.Add((Split-Path -Parent $_.ExecutablePath)) }
+}
+$paths.Add(${psQuote(fallback)})
+$paths.Add('C:\\Program Files\\Aron Chat')
+$paths.Add('C:\\Program Files (x86)\\Aron Chat')
+foreach ($p in $paths) {
+  if ($p -and (Test-Path (Join-Path $p 'Aron Chat.exe'))) { Write-Output $p; break }
+}
+`;
+  try {
+    const res = await run('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script]);
+    const dir = (res.stdout || '').trim().split(/\r?\n/).pop().trim();
+    if (dir && fs.existsSync(path.join(dir, EXE_NAME))) return dir;
+  } catch {
+    // остаётся путь по умолчанию
+  }
+  return fallback;
+}
+
+let cachedInstallDir = null;
+
+async function installDirForUpdate() {
+  if (!cachedInstallDir) cachedInstallDir = await detectInstallDir();
+  return cachedInstallDir;
+}
+
 function run(cmd, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { windowsHide: true, ...options });
@@ -238,17 +282,20 @@ function createWindow() {
 }
 
 // ---------- IPC ----------
-ipcMain.handle('setup:info', () => ({
-  version: app.getVersion(),
-  defaultDir: defaultInstallDir(),
-  terms: fs.readFileSync(appFile('terms.txt'), 'utf8'),
-  appName: APP_NAME,
-}));
+ipcMain.handle('setup:info', async () => {
+  const defaultDir = await installDirForUpdate();
+  return {
+    version: app.getVersion(),
+    defaultDir,
+    terms: fs.readFileSync(appFile('terms.txt'), 'utf8'),
+    appName: APP_NAME,
+  };
+});
 
 ipcMain.handle('setup:pick', async () => {
   const res = await dialog.showOpenDialog(mainWindow, {
     title: 'Куда установить Aron Chat',
-    defaultPath: defaultInstallDir(),
+    defaultPath: await installDirForUpdate(),
     properties: ['openDirectory', 'createDirectory'],
     buttonLabel: 'Выбрать папку',
   });
