@@ -869,15 +869,20 @@ function registerIpcHandlers() {
     return { ok: true };
   });
 
-  // Lite — portable-сборка: обновляем сам exe, а не запускаем установщик.
+  // Portable-сборки (полная и Lite) заменяют свой exe, установленная —
+  // запускает установщик в тихом режиме.
   function isLiteBuild() {
     const exe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath || '';
     return /lite/i.test(path.basename(exe)) || /lite/i.test(app.getName());
   }
 
-  function installLiteUpdate(downloaded) {
+  function isPortableBuild() {
+    return !!process.env.PORTABLE_EXECUTABLE_FILE;
+  }
+
+  function installPortableUpdate(downloaded) {
     const appExe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
-    if (!appExe) return { ok: false, error: 'не удалось определить путь к Lite-приложению' };
+    if (!appExe) return { ok: false, error: 'не удалось определить путь к приложению' };
 
     const scriptFile = path.join(os.tmpdir(), `aron-chat-lite-update-${Date.now()}.ps1`);
     const quote = (value) => `'${String(value).replace(/'/g, "''")}'`;
@@ -963,12 +968,18 @@ Start-Process -FilePath ${quote(appExe)}
     }
     if (!fs.existsSync(target)) return { ok: false, error: 'файл обновления не найден' };
 
-    if (isLiteBuild()) return installLiteUpdate(target);
+    if (isLiteBuild() || isPortableBuild()) return installPortableUpdate(target);
 
-    const opened = await shell.openPath(target);
-    if (opened) return { ok: false, error: opened };
-    setTimeout(() => app.quit(), 1500);
-    return { ok: true };
+    // Установленная версия: тихий режим установщика, без окна и кликов.
+    const installDir = path.dirname(process.execPath);
+    const child = spawn(target, ['--silent', '--dir', installDir, '--launch'], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    child.unref();
+    setTimeout(() => app.quit(), 1200);
+    return { ok: true, silent: true };
   });
 
   // --- Проверка обновлений ---
@@ -1012,10 +1023,13 @@ Start-Process -FilePath ${quote(appExe)}
         publishedAt = data.published_at || '';
         const assets = Array.isArray(data.assets) ? data.assets : [];
         const lite = isLiteBuild();
+        const portable = !!process.env.PORTABLE_EXECUTABLE_FILE;
         const setup = lite
           ? assets.find((a) => /Lite.*\.exe$/i.test(a.name || ''))
-          : (assets.find((a) => /Setup.*\.exe$/i.test(a.name || ''))
-            || assets.find((a) => !/Lite/i.test(a.name || '') && /\.exe$/i.test(a.name || '')));
+          : (portable
+            ? assets.find((a) => !/Lite|Setup/i.test(a.name || '') && /\.exe$/i.test(a.name || ''))
+            : (assets.find((a) => /Setup.*\.exe$/i.test(a.name || ''))
+              || assets.find((a) => !/Lite/i.test(a.name || '') && /\.exe$/i.test(a.name || ''))));
         if (setup) {
           download = setup.browser_download_url || '';
           assetName = setup.name || '';

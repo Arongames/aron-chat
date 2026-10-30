@@ -21,6 +21,20 @@ const APP_NAME = 'Aron Chat';
 const EXE_NAME = 'Aron Chat.exe';
 const UNINSTALL_KEY = 'AronChat';
 
+// Тихий режим для автообновления:
+//   --silent --dir "<папка>" [--launch]
+const ARGV = process.argv.slice(1);
+const SILENT = ARGV.includes('--silent');
+const SILENT_LAUNCH = ARGV.includes('--launch');
+
+function argValue(name) {
+  const direct = ARGV.find((a) => a.startsWith(`${name}=`));
+  if (direct) return direct.slice(name.length + 1);
+  const index = ARGV.indexOf(name);
+  if (index !== -1 && ARGV[index + 1]) return ARGV[index + 1];
+  return '';
+}
+
 // Диагностика запуска: установщик должен работать даже если что-то падает
 const LOG_FILE = path.join(os.tmpdir(), 'aron-setup.log');
 function trace(message) {
@@ -91,6 +105,26 @@ let cachedInstallDir = null;
 async function installDirForUpdate() {
   if (!cachedInstallDir) cachedInstallDir = await detectInstallDir();
   return cachedInstallDir;
+}
+
+function canWriteDir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    const probe = path.join(dir, '.aron-write-test');
+    fs.writeFileSync(probe, 'ok');
+    fs.unlinkSync(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function relaunchElevated(dir) {
+  const setupExe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
+  const script = `
+Start-Process -FilePath ${psQuote(setupExe)} -Verb RunAs -ArgumentList @('--silent','--dir',${psQuote(dir)},'--launch')
+`;
+  await run('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script]);
 }
 
 function run(cmd, args, options = {}) {
@@ -333,8 +367,34 @@ ipcMain.handle('setup:open-external', (_event, url) => {
   if (/^https?:\/\//i.test(String(url))) shell.openExternal(url);
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   trace('app ready');
+
+  if (SILENT) {
+    const dir = argValue('--dir') || await installDirForUpdate();
+    trace(`silent install dir=${dir}`);
+    try {
+      if (!canWriteDir(dir)) {
+        trace('silent: no write access, elevating');
+        await relaunchElevated(dir);
+        app.exit(0);
+        return;
+      }
+      await install(dir, () => {});
+      if (SILENT_LAUNCH) {
+        const exe = path.join(dir, EXE_NAME);
+        if (fs.existsSync(exe)) {
+          spawn(exe, [], { detached: true, stdio: 'ignore', cwd: dir }).unref();
+        }
+      }
+      app.exit(0);
+    } catch (err) {
+      trace(`silent error: ${err.stack || err.message}`);
+      app.exit(1);
+    }
+    return;
+  }
+
   createWindow();
 }).catch((err) => trace(`whenReady error: ${err.stack || err.message}`));
 

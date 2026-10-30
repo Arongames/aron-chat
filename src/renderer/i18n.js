@@ -18,6 +18,7 @@
     'DonationAlerts подключён': 'DonationAlerts connected',
     'Скачивание…': 'Downloading…',
     'Запускаю установщик…': 'Launching installer…',
+    'Устанавливаю обновление…': 'Installing update…',
     'Проверяю…': 'Checking…',
     'Откройте браузер и подтвердите доступ Google': 'Open the browser and confirm Google access',
     'Откройте браузер и подтвердите доступ DonationAlerts': 'Open the browser and confirm DonationAlerts access',

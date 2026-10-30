@@ -1743,7 +1743,7 @@ async function downloadAndInstallUpdate() {
       return;
     }
 
-    label.textContent = 'Запускаю установщик…';
+    label.textContent = 'Устанавливаю обновление…';
     const install = await ipcRenderer.invoke('update:install', res.file);
     if (!install || !install.ok) {
       toast(`Не удалось запустить установщик: ${install ? install.error : 'ошибка'}`, true);
