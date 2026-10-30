@@ -720,6 +720,20 @@ class YouTubeChat extends EventEmitter {
           this.attachTo(found, 'автореконнект');
           return;
         }
+
+        // Официальный API не дал чат — ищем актуальный эфир через InnerTube
+        const candidate = this.channelId
+          || (found && found.videoId)
+          || this.videoId
+          || ((await this.findByScrape()) || {}).videoId;
+        if (candidate) {
+          this.emit('log', `YouTube: ищу новый эфир через резервный режим (попытка ${attempt})`);
+          const inner = await this.startInnerTube(candidate);
+          if (inner && inner.connected) {
+            this.reconnecting = false;
+            return;
+          }
+        }
       } catch (err) {
         this.noteApiError(err, 'reconnect');
       }
