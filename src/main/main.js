@@ -981,6 +981,12 @@ function registerIpcHandlers() {
       if (platform === 'youtube') {
         const token = await ensureGoogleToken();
         if (!youtube.liveChatId) throw new Error('чат YouTube не подключён');
+        if (String(youtube.liveChatId).startsWith('innertube:')) {
+          throw new Error(
+            'YouTube: чат читается в резервном режиме — отправка недоступна, '
+            + 'пока не восстановится квота YouTube API'
+          );
+        }
         await googleOAuth.sendMessage({
           accessToken: token,
           liveChatId: youtube.liveChatId,
@@ -1075,7 +1081,9 @@ function registerIpcHandlers() {
         videoId: params.videoId || config.youtube_video_id,
         autoReconnect: params.autoReconnect ?? config.youtube_auto_reconnect,
       });
-      if (!result?.connected) return { ok: false, error: 'активная трансляция не найдена' };
+      if (!result?.connected) {
+        return { ok: false, error: (result && result.error) || 'активная трансляция не найдена' };
+      }
       return { ok: true };
     } catch (err) {
       log({ level: 'error', text: `YouTube: ${err.message}` });

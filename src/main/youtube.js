@@ -28,6 +28,14 @@ const { EventEmitter } = require('events');
 
 const API_BASE = 'https://www.googleapis.com/youtube/v3';
 
+// Резервное чтение чата без API-ключа и квоты (InnerTube)
+let LiveChat = null;
+try {
+  ({ LiveChat } = require('youtube-chat'));
+} catch {
+  // модуль не установлен — работаем только через официальный API
+}
+
 // Интервалы (мс)
 const WATCHDOG_INTERVAL = 20000;    // проверка «жив ли ещё стрим»
 const RECONNECT_DELAY = 15000;      // база паузы между попытками найти новый эфир
@@ -67,6 +75,9 @@ class YouTubeChat extends EventEmitter {
     this.lastMessageAt = 0;
     this.reconnectDelay = RECONNECT_DELAY;
     this.quotaBlockedUntil = 0;
+    this.lastError = null;
+    this.innerChat = null;
+    this.innerLiveId = null;
   }
 
   isConnected() {
@@ -87,7 +98,10 @@ class YouTubeChat extends EventEmitter {
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
     }
-    if (this.apiKey) url.searchParams.set('key', this.apiKey);
+    // Если есть OAuth-токен — идём только с ним: API-ключ может быть
+    // ограничен по referrer/IP или исчерпан, и тогда он ломает запрос
+    // даже при валидном токене.
+    if (this.apiKey && !this.accessToken) url.searchParams.set('key', this.apiKey);
 
     const headers = {};
     if (this.accessToken) headers.Authorization = `Bearer ${this.accessToken}`;
@@ -371,6 +385,9 @@ class YouTubeChat extends EventEmitter {
 
   // Логируем ошибки API и бережём квоту при quotaExceeded
   noteApiError(err, where) {
+    if (err) {
+      this.lastError = `${where}: ${err.message || err}${err.reason ? ` (${err.reason})` : ''}`;
+    }
     if (
       err &&
       (err.status === 403 || err.status === 429) &&
@@ -381,6 +398,93 @@ class YouTubeChat extends EventEmitter {
       return;
     }
     if (err) this.emit('log', `YouTube API (${where}): ${err.message}`);
+  }
+
+  // ============================================================
+  // Резервный чат через InnerTube (без API-ключа и квоты)
+  // ============================================================
+  stopInnerTube() {
+    if (this.innerChat) {
+      try { this.innerChat.stop(); } catch { /* уже остановлен */ }
+      this.innerChat = null;
+    }
+    this.innerLiveId = null;
+  }
+
+  async startInnerTube(liveId) {
+    if (!LiveChat) throw new Error('модуль youtube-chat не установлен');
+
+    this.stopInnerTube();
+
+    // Если известен канал — пусть модуль сам найдёт актуальный эфир.
+    // Это спасает от устаревшего videoId в конфиге.
+    const useChannel = !!this.channelId;
+    const chat = useChannel
+      ? new LiveChat({ channelId: this.channelId })
+      : new LiveChat({ liveId });
+    if (!useChannel && !liveId) throw new Error('неизвестен ID трансляции');
+
+    this.innerChat = chat;
+    this.innerLiveId = liveId || null;
+    if (!useChannel) this.videoId = liveId;
+
+    chat.on('start', (id) => {
+      this.innerLiveId = id || liveId;
+      this.videoId = this.innerLiveId;
+      this.liveChatId = `innertube:${this.innerLiveId}`;
+      this.lastMessageAt = Date.now();
+      this.emit('status', {
+        connected: true,
+        text: `YouTube: чат подключён (резервный режим, ${this.innerLiveId})`,
+      });
+      this.emit('stream:changed', {
+        videoId: this.innerLiveId,
+        liveChatId: null,
+        title: this.videoTitle,
+        reason: 'InnerTube',
+      });
+    });
+
+    chat.on('chat', (item) => {
+      if (!item || !item.author) return;
+      const text = (item.message || [])
+        .map((part) => part.text || part.emojiText || '')
+        .join('')
+        .trim();
+      if (!text) return;
+      this.lastMessageAt = Date.now();
+      this.emit('message', {
+        platform: 'youtube',
+        user: item.author.name,
+        text,
+        avatar: (item.author.thumbnail && item.author.thumbnail.url) || null,
+        color: null,
+        isMod: !!item.isModerator,
+        isSubscriber: !!item.isMembership,
+      });
+    });
+
+    chat.on('end', (reason) => {
+      this.innerChat = null;
+      this.liveChatId = null;
+      this.emit('status', {
+        connected: false,
+        text: `YouTube: чат завершён (${reason || 'эфир закончился'})`,
+      });
+      if (this.autoReconnect && this.running) this.beginReconnect('эфир завершён');
+    });
+
+    chat.on('error', (err) => {
+      this.emit('log', `YouTube InnerTube: ${err && (err.message || err)}`);
+    });
+
+    const ok = await chat.start();
+    if (!ok) {
+      this.stopInnerTube();
+      this.liveChatId = null;
+      throw new Error('не удалось запустить резервное чтение чата');
+    }
+    return { connected: true, videoId: this.videoId, liveChatId: this.liveChatId, innerTube: true };
   }
 
   // ============================================================
@@ -414,16 +518,30 @@ class YouTubeChat extends EventEmitter {
       }
     }
 
-    // 2) Иначе сразу идём искать актуальный эфир
+    // 2) Ищем актуальный эфир через официальный API
     const found = await this.findLiveStream();
-    if (found) return this.attachTo(found, 'авто-поиск');
+    if (found && found.liveChatId) return this.attachTo(found, 'авто-поиск');
 
-    // 3) Эфира нет — не падаем, а уходим в режим ожидания с автореконнектом
+    // 3) API не дал ID чата (квота/ключ/ошибка) — пробуем InnerTube без квоты
+    const candidate = this.channelId
+      || (found && found.videoId)
+      || this.videoId
+      || ((await this.findByScrape()) || {}).videoId;
+    if (candidate) {
+      try {
+        this.emit('log', 'YouTube: переключаюсь на резервное чтение чата');
+        return await this.startInnerTube(candidate);
+      } catch (err) {
+        this.emit('log', `YouTube InnerTube: ${err.message}`);
+      }
+    }
+
+    // 4) Эфира нет — не падаем, а уходим в режим ожидания с автореконнектом
     if (this.autoReconnect) {
       this.beginReconnect('прямой эфир не найден');
-      return { connected: false, waiting: true };
+      return { connected: false, waiting: true, error: this.lastError || undefined };
     }
-    throw new Error('Активная трансляция канала не найдена');
+    throw new Error(this.lastError || 'Активная трансляция канала не найдена');
   }
 
   // Привязка к найденному эфиру и запуск чтения
@@ -624,6 +742,7 @@ class YouTubeChat extends EventEmitter {
     this.polling = false;
     this.reconnecting = false;
     this.stopWatchdog();
+    this.stopInnerTube();
     this.liveChatId = null;
     this.pageToken = undefined;
     this.emit('status', { connected: false, text: 'Чат YouTube отключён' });
