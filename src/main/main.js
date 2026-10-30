@@ -26,6 +26,7 @@
 const { app, BrowserWindow, ipcMain, Menu, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 const {
   loadConfig,
@@ -763,6 +764,61 @@ function registerIpcHandlers() {
     const target = String(url || '');
     if (!/^https?:\/\//i.test(target)) return { ok: false, error: 'разрешены только http(s)-ссылки' };
     shell.openExternal(target);
+    return { ok: true };
+  });
+
+  ipcMain.handle('update:download', async (_event, payload = {}) => {
+    const url = String(payload.url || '');
+    const version = String(payload.version || '').replace(/[^\w.-]/g, '') || 'latest';
+    if (!/^https:\/\//i.test(url)) return { ok: false, error: 'разрешены только https-ссылки' };
+
+    const file = path.join(os.tmpdir(), `AronChat-Setup-${version}.exe`);
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': `AronChat/${app.getVersion()}` },
+      });
+      if (!res.ok || !res.body) throw new Error(`сервер ответил HTTP ${res.status}`);
+
+      const total = Number(res.headers.get('content-length')) || 0;
+      const out = fs.createWriteStream(file);
+      const reader = res.body.getReader();
+      let received = 0;
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = Buffer.from(value);
+        received += chunk.length;
+        if (!out.write(chunk)) {
+          await new Promise((resolve) => out.once('drain', resolve));
+        }
+        sendToWindow('update:progress', {
+          received,
+          total,
+          percent: total ? Math.min(99, Math.round((received / total) * 100)) : 0,
+        });
+      }
+
+      await new Promise((resolve, reject) => {
+        out.end((err) => (err ? reject(err) : resolve()));
+      });
+      return { ok: true, file, size: received };
+    } catch (err) {
+      try { fs.unlinkSync(file); } catch { /* нет файла */ }
+      return { ok: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('update:install', async (_event, file) => {
+    const target = path.resolve(String(file || ''));
+    if (!/\.exe$/i.test(target) || !target.startsWith(os.tmpdir())) {
+      return { ok: false, error: 'недопустимый файл обновления' };
+    }
+    if (!fs.existsSync(target)) return { ok: false, error: 'файл обновления не найден' };
+
+    const opened = await shell.openPath(target);
+    if (opened) return { ok: false, error: opened };
+    setTimeout(() => app.quit(), 1500);
     return { ok: true };
   });
 

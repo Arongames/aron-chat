@@ -355,6 +355,17 @@
                     <label class="sw"><input type="checkbox" id="showPlatformIcons" /><span></span></label>
                   </div>
 
+                  <div class="field">
+                    <label for="themeAccent">Акцентный цвет</label>
+                    <select class="input" id="themeAccent">
+                      <option value="mint">Мята (по умолчанию)</option>
+                      <option value="violet">Фиолетовый</option>
+                      <option value="blue">Синий</option>
+                      <option value="pink">Розовый</option>
+                      <option value="amber">Янтарный</option>
+                    </select>
+                  </div>
+
                   <p class="note">Применяется к ленте приложения и к оверлею. Быстро менять размер можно кнопками A−/A+ в шапке чата.</p>
                 </div>
 
@@ -781,9 +792,13 @@
         <span class="modal-step" id="updateModalCurrent"></span>
       </div>
       <div class="update-notes" id="updateModalNotes"></div>
+      <div class="progress" id="updateProgressWrap" hidden style="margin-top:12px">
+        <div class="progress-bar" id="updateProgressBar"></div>
+      </div>
+      <p class="note" id="updateProgressText" hidden>Скачивание…</p>
       <div class="actions-row" style="justify-content:flex-end;margin-top:14px">
         <button class="btn ghost" id="btnUpdateLater">Позже</button>
-        <button class="btn primary" id="btnUpdateDownload">Скачать</button>
+        <button class="btn primary" id="btnUpdateDownload">Скачать и установить</button>
       </div>
     </div>
   </div>

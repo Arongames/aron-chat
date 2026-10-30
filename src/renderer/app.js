@@ -708,6 +708,8 @@ function applyConfigToUI() {
   $('chatFontSize').value = c.chat_font_size;
   $('platformIconSize').value = c.platform_icon_size;
   $('showPlatformIcons').checked = c.show_platform_icons !== false;
+  $('themeAccent').value = c.theme_accent || 'mint';
+  document.body.dataset.theme = c.theme_accent || 'mint';
   $('updateAutoCheck').checked = c.update_check_enabled !== false;
   $('updateManifestUrl').value = c.update_manifest_url || '';
   applyChatAppearance();
@@ -935,6 +937,11 @@ bindNumber('overlayChatTtl', 'overlay_chat_ttl', 0, 600);
 bindNumber('chatFontSize', 'chat_font_size', 10, 28);
 bindNumber('platformIconSize', 'platform_icon_size', 14, 40);
 bindCheck('showPlatformIcons', 'show_platform_icons');
+$('themeAccent').addEventListener('change', () => {
+  const value = $('themeAccent').value;
+  document.body.dataset.theme = value;
+  stage({ theme_accent: value }, true);
+});
 bindCheck('updateAutoCheck', 'update_check_enabled');
 bindText('updateManifestUrl', 'update_manifest_url', (v) => v.trim());
 bindNumber('overlayViewersScale', 'overlay_viewers_scale', 60, 200);
@@ -1636,7 +1643,7 @@ async function checkUpdates(manual = false) {
       status.textContent = `Доступна версия ${res.latest} (у вас ${res.current})`;
       const download = $('btnDownloadUpdate');
       download.hidden = !res.url;
-      download.textContent = `Скачать ${res.latest}`;
+      download.textContent = `Скачать и установить ${res.latest}`;
       $('btnShowUpdateNotes').hidden = !res.notes;
       toast(`Доступно обновление ${res.latest}`);
       if (manual || updateDismissedVersion !== res.latest) showUpdateModal(res);
@@ -1661,19 +1668,58 @@ function maybeAutoCheckUpdates() {
   }, 4000);
 }
 
+// Скачивание и запуск установщика обновления
+async function downloadAndInstallUpdate() {
+  if (!updateInfo || !updateInfo.url) {
+    toast('Ссылка на установщик не найдена', true);
+    return;
+  }
+
+  const wrap = $('updateProgressWrap');
+  const bar = $('updateProgressBar');
+  const label = $('updateProgressText');
+  const buttons = [$('btnDownloadUpdate'), $('btnUpdateDownload')];
+
+  wrap.hidden = false;
+  label.hidden = false;
+  bar.style.width = '0%';
+  label.textContent = 'Скачивание…';
+  buttons.forEach((b) => { b.disabled = true; });
+
+  try {
+    const res = await ipcRenderer.invoke('update:download', {
+      url: updateInfo.url,
+      version: updateInfo.latest,
+    });
+    if (!res || !res.ok) {
+      toast(`Не удалось скачать обновление: ${res ? res.error : 'ошибка'}`, true);
+      return;
+    }
+
+    label.textContent = 'Запускаю установщик…';
+    const install = await ipcRenderer.invoke('update:install', res.file);
+    if (!install || !install.ok) {
+      toast(`Не удалось запустить установщик: ${install ? install.error : 'ошибка'}`, true);
+    }
+  } finally {
+    buttons.forEach((b) => { b.disabled = false; });
+  }
+}
+
+ipcRenderer.on('update:progress', (_e, progress) => {
+  if (!progress) return;
+  $('updateProgressWrap').hidden = false;
+  $('updateProgressText').hidden = false;
+  $('updateProgressBar').style.width = `${progress.percent || 0}%`;
+  const mb = (progress.received / 1024 / 1024).toFixed(1);
+  $('updateProgressText').textContent = progress.total
+    ? `Скачивание… ${progress.percent}% (${mb} МБ)`
+    : `Скачивание… ${mb} МБ`;
+});
+
 $('btnCheckUpdates').addEventListener('click', () => checkUpdates(true));
-$('btnDownloadUpdate').addEventListener('click', () => {
-  if (updateInfo && updateInfo.url) {
-    ipcRenderer.invoke('app:openExternal', updateInfo.url);
-    closeUpdateModal();
-  }
-});
-$('btnUpdateDownload').addEventListener('click', () => {
-  if (updateInfo && updateInfo.url) {
-    ipcRenderer.invoke('app:openExternal', updateInfo.url);
-    closeUpdateModal();
-  }
-});
+$('btnDownloadUpdate').addEventListener('click', downloadAndInstallUpdate);
+$('btnUpdateDownload').addEventListener('click', downloadAndInstallUpdate);
 $('btnUpdateLater').addEventListener('click', () => {
   updateDismissedVersion = updateInfo ? updateInfo.latest : '';
   closeUpdateModal();

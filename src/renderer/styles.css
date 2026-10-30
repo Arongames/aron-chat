@@ -1381,3 +1381,25 @@ details.advanced:not([open]) > *:not(summary) { display: none; }
   .topbar { padding-left: 12px; padding-right: 12px; }
   .chat-head, .toolbar { flex-wrap: wrap; }
 }
+
+/* Акцентные темы интерфейса */
+body[data-theme="violet"] { --mint: #8b5cf6; --mint-2: #c4b5fd; --mint-soft: rgba(139, 92, 246, 0.12); }
+body[data-theme="blue"]   { --mint: #3b82f6; --mint-2: #93c5fd; --mint-soft: rgba(59, 130, 246, 0.12); }
+body[data-theme="pink"]   { --mint: #ec4899; --mint-2: #f9a8d4; --mint-soft: rgba(236, 72, 153, 0.12); }
+body[data-theme="amber"]  { --mint: #f59e0b; --mint-2: #fcd34d; --mint-soft: rgba(245, 158, 11, 0.12); }
+
+/* Прогресс скачивания обновления */
+.progress {
+  height: 8px;
+  border-radius: 8px;
+  background: #151a22;
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  width: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--mint), var(--mint-2));
+  transition: width 0.2s ease;
+}

@@ -110,6 +110,8 @@ const DEFAULT_CONFIG = {
   // Проверка обновлений (GitHub Releases или свой latest.json)
   update_check_enabled: true,
   update_manifest_url: 'https://api.github.com/repos/Arongames/aron-chat/releases/latest',
+  // Акцентный цвет интерфейса
+  theme_accent: 'mint',
   viewers_twitch: true,
   viewers_youtube: true,
   viewers_tiktok: true,
@@ -328,6 +330,9 @@ function sanitize(config) {
   out.update_check_enabled = out.update_check_enabled !== false;
   out.update_manifest_url = String(out.update_manifest_url || '').trim()
     || DEFAULT_CONFIG.update_manifest_url;
+  out.theme_accent = ['mint', 'violet', 'blue', 'pink', 'amber'].includes(out.theme_accent)
+    ? out.theme_accent
+    : 'mint';
 
   out.twitch_access_token = String(out.twitch_access_token || '').trim();
   out.twitch_refresh_token = String(out.twitch_refresh_token || '').trim();
