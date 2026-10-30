@@ -1539,6 +1539,19 @@ renderTagsHidden = tagBoxController('hiddenBox', 'hidden_users', true);
 // ============================================================
 let updateInfo = null;
 let updateAutoChecked = false;
+let updateDismissedVersion = '';
+
+function showUpdateModal(info) {
+  if (!info) return;
+  $('updateModalVersion').textContent = info.latest || '';
+  $('updateModalCurrent').textContent = `у вас ${info.current || ''}`;
+  $('updateModalNotes').textContent = info.notes || 'Описание изменений не приложено.';
+  $('updateModal').hidden = false;
+}
+
+function closeUpdateModal() {
+  $('updateModal').hidden = true;
+}
 
 async function checkUpdates(manual = false) {
   const status = $('updateStatus');
@@ -1552,6 +1565,7 @@ async function checkUpdates(manual = false) {
     if (!res || !res.ok) {
       status.textContent = `Не удалось проверить: ${res ? res.error : 'неизвестная ошибка'}`;
       $('btnDownloadUpdate').hidden = true;
+      $('btnShowUpdateNotes').hidden = true;
       if (manual) toast('Не удалось проверить обновления');
       return;
     }
@@ -1561,11 +1575,14 @@ async function checkUpdates(manual = false) {
       const download = $('btnDownloadUpdate');
       download.hidden = !res.url;
       download.textContent = `Скачать ${res.latest}`;
+      $('btnShowUpdateNotes').hidden = !res.notes;
       toast(`Доступно обновление ${res.latest}`);
+      if (manual || updateDismissedVersion !== res.latest) showUpdateModal(res);
     } else {
       updateInfo = null;
       status.textContent = `У вас последняя версия (${res.current})`;
       $('btnDownloadUpdate').hidden = true;
+      $('btnShowUpdateNotes').hidden = true;
       if (manual) toast('Обновлений нет');
     }
   } finally {
@@ -1586,8 +1603,20 @@ $('btnCheckUpdates').addEventListener('click', () => checkUpdates(true));
 $('btnDownloadUpdate').addEventListener('click', () => {
   if (updateInfo && updateInfo.url) {
     ipcRenderer.invoke('app:openExternal', updateInfo.url);
+    closeUpdateModal();
   }
 });
+$('btnUpdateDownload').addEventListener('click', () => {
+  if (updateInfo && updateInfo.url) {
+    ipcRenderer.invoke('app:openExternal', updateInfo.url);
+    closeUpdateModal();
+  }
+});
+$('btnUpdateLater').addEventListener('click', () => {
+  updateDismissedVersion = updateInfo ? updateInfo.latest : '';
+  closeUpdateModal();
+});
+$('btnShowUpdateNotes').addEventListener('click', () => showUpdateModal(updateInfo));
 
 fillSelects();
 

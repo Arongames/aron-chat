@@ -662,6 +662,7 @@
               <div class="actions-row">
                 <button class="btn primary" id="btnCheckUpdates">Проверить обновления</button>
                 <button class="btn" id="btnDownloadUpdate" hidden>Скачать</button>
+                <button class="btn ghost" id="btnShowUpdateNotes" hidden>Что нового</button>
               </div>
               <div class="tg">
                 <div><div class="t">Проверять при запуске</div><div class="s">Раз в запуск, без автоматического скачивания</div></div>
@@ -759,6 +760,20 @@
         <button class="btn ghost" id="wizardSkip">Пропустить</button>
         <div class="spacer"></div>
         <button class="btn primary" id="wizardNext">Далее</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="updateModal" hidden>
+    <div class="modal">
+      <div class="modal-head">
+        <h2>Доступно обновление <span id="updateModalVersion"></span></h2>
+        <span class="modal-step" id="updateModalCurrent"></span>
+      </div>
+      <div class="update-notes" id="updateModalNotes"></div>
+      <div class="actions-row" style="justify-content:flex-end;margin-top:14px">
+        <button class="btn ghost" id="btnUpdateLater">Позже</button>
+        <button class="btn primary" id="btnUpdateDownload">Скачать</button>
       </div>
     </div>
   </div>

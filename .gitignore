@@ -31,3 +31,5 @@ src/main/builtin.js
 e2e_*.txt
 
 _ud-*/
+
+_e2e-portable/
