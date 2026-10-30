@@ -27,6 +27,7 @@ const { app, BrowserWindow, ipcMain, Menu, shell, dialog } = require('electron')
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
 const os = require('os');
 
 const {
@@ -868,6 +869,42 @@ function registerIpcHandlers() {
     return { ok: true };
   });
 
+  // Lite — portable-сборка: обновляем сам exe, а не запускаем установщик.
+  function isLiteBuild() {
+    const exe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath || '';
+    return /lite/i.test(path.basename(exe)) || /lite/i.test(app.getName());
+  }
+
+  function installLiteUpdate(downloaded) {
+    const appExe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
+    if (!appExe) return { ok: false, error: 'не удалось определить путь к Lite-приложению' };
+
+    const scriptFile = path.join(os.tmpdir(), `aron-chat-lite-update-${Date.now()}.ps1`);
+    const quote = (value) => `'${String(value).replace(/'/g, "''")}'`;
+    const script = `
+$ErrorActionPreference = 'SilentlyContinue'
+Wait-Process -Id ${process.pid} -Timeout 30
+Start-Sleep -Milliseconds 800
+Copy-Item -LiteralPath ${quote(downloaded)} -Destination ${quote(appExe)} -Force
+Start-Process -FilePath ${quote(appExe)}
+`;
+    fs.writeFileSync(scriptFile, script, 'utf8');
+
+    const child = spawn('powershell.exe', [
+      '-NoProfile',
+      '-ExecutionPolicy', 'Bypass',
+      '-File', scriptFile,
+    ], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    child.unref();
+
+    setTimeout(() => app.quit(), 1200);
+    return { ok: true, portable: true };
+  }
+
   ipcMain.handle('update:download', async (_event, payload = {}) => {
     const url = String(payload.url || '');
     const version = String(payload.version || '').replace(/[^\w.-]/g, '') || 'latest';
@@ -926,6 +963,8 @@ function registerIpcHandlers() {
     }
     if (!fs.existsSync(target)) return { ok: false, error: 'файл обновления не найден' };
 
+    if (isLiteBuild()) return installLiteUpdate(target);
+
     const opened = await shell.openPath(target);
     if (opened) return { ok: false, error: opened };
     setTimeout(() => app.quit(), 1500);
@@ -972,8 +1011,11 @@ function registerIpcHandlers() {
         notes = String(data.body || '').slice(0, 8000);
         publishedAt = data.published_at || '';
         const assets = Array.isArray(data.assets) ? data.assets : [];
-        const setup = assets.find((a) => /Setup.*\.exe$/i.test(a.name || ''))
-          || assets.find((a) => /\.exe$/i.test(a.name || ''));
+        const lite = isLiteBuild();
+        const setup = lite
+          ? assets.find((a) => /Lite.*\.exe$/i.test(a.name || ''))
+          : (assets.find((a) => /Setup.*\.exe$/i.test(a.name || ''))
+            || assets.find((a) => !/Lite/i.test(a.name || '') && /\.exe$/i.test(a.name || '')));
         if (setup) {
           download = setup.browser_download_url || '';
           assetName = setup.name || '';
