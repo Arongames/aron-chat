@@ -716,6 +716,79 @@ function registerIpcHandlers() {
     return { ok: true };
   });
 
+  // --- Проверка обновлений ---
+  function compareVersions(a, b) {
+    const pa = String(a).replace(/^v/i, '').split(/[.-]/).map((x) => Number.parseInt(x, 10) || 0);
+    const pb = String(b).replace(/^v/i, '').split(/[.-]/).map((x) => Number.parseInt(x, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i += 1) {
+      const d = (pa[i] || 0) - (pb[i] || 0);
+      if (d !== 0) return d > 0 ? 1 : -1;
+    }
+    return 0;
+  }
+
+  ipcMain.handle('update:check', async () => {
+    const url = String(config.update_manifest_url || '').trim();
+    if (!/^https?:\/\//i.test(url)) {
+      return { ok: false, error: 'не задан адрес проверки обновлений' };
+    }
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': `AronChat/${app.getVersion()}`,
+          Accept: 'application/vnd.github+json, application/json',
+        },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!res.ok) throw new Error(`сервер ответил HTTP ${res.status}`);
+      const data = await res.json();
+
+      let latest = '';
+      let notes = '';
+      let download = '';
+      let publishedAt = '';
+      let assetName = '';
+
+      // GitHub Releases API
+      if (data && (data.tag_name || (data.name && data.assets))) {
+        latest = String(data.tag_name || data.name || '').replace(/^v/i, '').trim();
+        notes = String(data.body || '').slice(0, 8000);
+        publishedAt = data.published_at || '';
+        const assets = Array.isArray(data.assets) ? data.assets : [];
+        const setup = assets.find((a) => /Setup.*\.exe$/i.test(a.name || ''))
+          || assets.find((a) => /\.exe$/i.test(a.name || ''));
+        if (setup) {
+          download = setup.browser_download_url || '';
+          assetName = setup.name || '';
+        }
+      } else {
+        // Свой latest.json
+        latest = String(data.version || data.latest || '').replace(/^v/i, '').trim();
+        notes = String(data.notes || '').slice(0, 8000);
+        download = String(data.url || data.download || '');
+        publishedAt = data.date || data.published_at || '';
+      }
+
+      if (!latest) throw new Error('в ответе нет номера версии');
+      const current = app.getVersion();
+      return {
+        ok: true,
+        current,
+        latest,
+        hasUpdate: compareVersions(latest, current) > 0,
+        notes,
+        url: download,
+        assetName,
+        publishedAt,
+      };
+    } catch (err) {
+      const message = err.name === 'TimeoutError'
+        ? 'сервер проверки обновлений не ответил'
+        : err.message;
+      return { ok: false, error: message };
+    }
+  });
+
   // --- Оверлей ---
   ipcMain.handle('overlay:info', () => overlayInfo());
 

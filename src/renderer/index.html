@@ -657,8 +657,28 @@
             </div>
 
             <div class="card">
-              <h2>Что умеет</h2>
-              <ul class="feature-list">
+              <h2>Обновления</h2>
+              <p class="note" id="updateStatus">Проверка ещё не выполнялась</p>
+              <div class="actions-row">
+                <button class="btn primary" id="btnCheckUpdates">Проверить обновления</button>
+                <button class="btn" id="btnDownloadUpdate" hidden>Скачать</button>
+              </div>
+              <div class="tg">
+                <div><div class="t">Проверять при запуске</div><div class="s">Раз в запуск, без автоматического скачивания</div></div>
+                <label class="sw"><input type="checkbox" id="updateAutoCheck" /><span></span></label>
+              </div>
+              <details class="advanced">
+                <summary>Свой адрес проверки</summary>
+                <div class="field">
+                  <label for="updateManifestUrl">URL latest.json или GitHub API</label>
+                  <input type="text" class="input" id="updateManifestUrl" spellcheck="false" />
+                </div>
+                <p class="note">По умолчанию — последний релиз GitHub Arongames/aron-chat.</p>
+              </details>
+            </div>
+
+            <div class="card">
+              <h2>Что умеет</h2>              <ul class="feature-list">
                 <li>Три чата в одной ленте с бейджами подписок и подарков.</li>
                 <li>Озвучка сообщений, подписок и подарков через Speechify.</li>
                 <li>Кастомные команды: на триггер озвучивается заготовленный ответ.</li>

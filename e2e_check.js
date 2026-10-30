@@ -47,12 +47,13 @@ async function fetchStatus(url) {
   check('адрес чат-оверлея', chatUrl.endsWith('/overlay/chat'), chatUrl);
   check('адрес оверлея зрителей', viewersUrl.endsWith('/overlay/viewers'), viewersUrl);
 
-  const chatPage = await fetchStatus(OVERLAY_CHAT);
+  const chatPage = await fetchStatus(chatUrl);
   check('чат-оверлей отдаётся', chatPage.status === 200 && /data-widget="chat"/.test(chatPage.body));
-  const viewersPage = await fetchStatus(OVERLAY_VIEWERS);
+  const viewersPage = await fetchStatus(viewersUrl);
   check('оверлей зрителей отдаётся', viewersPage.status === 200 && /data-widget="viewers"/.test(viewersPage.body));
-  check('стили оверлея доступны', (await fetchStatus('http://127.0.0.1:3000/overlay.css')).status === 200);
-  check('шрифты оверлея доступны', (await fetchStatus('http://127.0.0.1:3000/fonts/fonts.css')).status === 200);
+  const overlayBase = chatUrl.replace(/\/overlay\/chat$/, '');
+  check('стили оверлея доступны', (await fetchStatus(`${overlayBase}/overlay.css`)).status === 200);
+  check('шрифты оверлея доступны', (await fetchStatus(`${overlayBase}/fonts/fonts.css`)).status === 200);
 
   // ---------- Настройки: разделы не уезжают ----------
   await page.evaluate("showPage('settings')");

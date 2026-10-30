@@ -106,8 +106,10 @@ const DEFAULT_CONFIG = {
   overlay_viewers_enabled: true,
   overlay_viewers_position: 'top-left',
   overlay_viewers_scale: 100,
-  // Счётчик зрителей (Twitch Helix + YouTube Data API + TikTok)
   viewers_enabled: true,
+  // Проверка обновлений (GitHub Releases или свой latest.json)
+  update_check_enabled: true,
+  update_manifest_url: 'https://api.github.com/repos/Arongames/aron-chat/releases/latest',
   viewers_twitch: true,
   viewers_youtube: true,
   viewers_tiktok: true,
@@ -321,6 +323,11 @@ function sanitize(config) {
   out.viewers_twitch = out.viewers_twitch !== false;
   out.viewers_youtube = out.viewers_youtube !== false;
   out.viewers_tiktok = out.viewers_tiktok !== false;
+
+  // Проверка обновлений
+  out.update_check_enabled = out.update_check_enabled !== false;
+  out.update_manifest_url = String(out.update_manifest_url || '').trim()
+    || DEFAULT_CONFIG.update_manifest_url;
 
   out.twitch_access_token = String(out.twitch_access_token || '').trim();
   out.twitch_refresh_token = String(out.twitch_refresh_token || '').trim();

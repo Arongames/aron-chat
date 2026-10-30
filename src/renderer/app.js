@@ -682,6 +682,8 @@ function applyConfigToUI() {
   $('chatFontSize').value = c.chat_font_size;
   $('platformIconSize').value = c.platform_icon_size;
   $('showPlatformIcons').checked = c.show_platform_icons !== false;
+  $('updateAutoCheck').checked = c.update_check_enabled !== false;
+  $('updateManifestUrl').value = c.update_manifest_url || '';
   applyChatAppearance();
 
   $('overlayViewersEnabled').checked = c.overlay_viewers_enabled !== false;
@@ -907,6 +909,8 @@ bindNumber('overlayChatTtl', 'overlay_chat_ttl', 0, 600);
 bindNumber('chatFontSize', 'chat_font_size', 10, 28);
 bindNumber('platformIconSize', 'platform_icon_size', 14, 40);
 bindCheck('showPlatformIcons', 'show_platform_icons');
+bindCheck('updateAutoCheck', 'update_check_enabled');
+bindText('updateManifestUrl', 'update_manifest_url', (v) => v.trim());
 bindNumber('overlayViewersScale', 'overlay_viewers_scale', 60, 200);
 
 // ============================================================
@@ -1530,6 +1534,61 @@ renderTagsUsers = tagBoxController('usersBox', 'ignored_users', true);
 renderTagsPhrases = tagBoxController('phrasesBox', 'ignored_phrases', true);
 renderTagsHidden = tagBoxController('hiddenBox', 'hidden_users', true);
 
+// ============================================================
+// Проверка обновлений
+// ============================================================
+let updateInfo = null;
+let updateAutoChecked = false;
+
+async function checkUpdates(manual = false) {
+  const status = $('updateStatus');
+  const button = $('btnCheckUpdates');
+  if (!status) return;
+
+  status.textContent = 'Проверяю…';
+  button.disabled = true;
+  try {
+    const res = await ipcRenderer.invoke('update:check');
+    if (!res || !res.ok) {
+      status.textContent = `Не удалось проверить: ${res ? res.error : 'неизвестная ошибка'}`;
+      $('btnDownloadUpdate').hidden = true;
+      if (manual) toast('Не удалось проверить обновления');
+      return;
+    }
+    if (res.hasUpdate) {
+      updateInfo = res;
+      status.textContent = `Доступна версия ${res.latest} (у вас ${res.current})`;
+      const download = $('btnDownloadUpdate');
+      download.hidden = !res.url;
+      download.textContent = `Скачать ${res.latest}`;
+      toast(`Доступно обновление ${res.latest}`);
+    } else {
+      updateInfo = null;
+      status.textContent = `У вас последняя версия (${res.current})`;
+      $('btnDownloadUpdate').hidden = true;
+      if (manual) toast('Обновлений нет');
+    }
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function maybeAutoCheckUpdates() {
+  if (updateAutoChecked) return;
+  updateAutoChecked = true;
+  if (!state.config || state.config.update_check_enabled === false) return;
+  setTimeout(() => {
+    if (state.config && state.config.update_check_enabled !== false) checkUpdates(false);
+  }, 4000);
+}
+
+$('btnCheckUpdates').addEventListener('click', () => checkUpdates(true));
+$('btnDownloadUpdate').addEventListener('click', () => {
+  if (updateInfo && updateInfo.url) {
+    ipcRenderer.invoke('app:openExternal', updateInfo.url);
+  }
+});
+
 fillSelects();
 
 ipcRenderer.invoke('config:get').then((payload) => {
@@ -1551,6 +1610,7 @@ ipcRenderer.invoke('config:get').then((payload) => {
   renderViewers(state.viewers);
   renderOAuth(payload.oauth);
   updateSaveState();
+  maybeAutoCheckUpdates();
 
   if (!payload.config.onboarding_done) openWizard();
 
