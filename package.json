@@ -1,6 +1,6 @@
 {
   "name": "streamer-multichat",
-  "version": "1.10.39",
+  "version": "1.10.40",
   "description": "Aron Chat: TikTok LIVE, Twitch, YouTube, оверлей для OBS и облачная озвучка Speechify",
   "author": {
     "name": "SGR (StreamRateGame)",
@@ -46,7 +46,7 @@
       "uninstallerSidebar": "build/installerSidebar.bmp",
       "include": "build/installer.nsh"
     },
-    "buildVersion": "1.10.39.0"
+    "buildVersion": "1.10.40.0"
   },
   "main": "src/main/main.js",
   "scripts": {

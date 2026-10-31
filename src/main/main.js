@@ -1065,8 +1065,12 @@ Start-Process -FilePath ${quote(appExe)}
     if (isLiteBuild() || isPortableBuild()) return installPortableUpdate(target);
 
     // Установленная версия: тихий режим установщика, без окна и кликов.
+    // Путь передаём файлом, а не аргументом: пробелы в "Program Files"
+    // ломаются при повышении прав через PowerShell.
     const installDir = path.dirname(process.execPath);
-    const child = spawn(target, ['--silent', '--dir', installDir, '--launch'], {
+    const targetFile = path.join(os.tmpdir(), 'aron-update-target.txt');
+    try { fs.writeFileSync(targetFile, installDir, 'utf8'); } catch { /* установщик найдёт сам */ }
+    const child = spawn(target, ['--silent', '--launch'], {
       detached: true,
       stdio: 'ignore',
       windowsHide: true,

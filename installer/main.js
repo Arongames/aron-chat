@@ -122,9 +122,29 @@ function canWriteDir(dir) {
 async function relaunchElevated(dir) {
   const setupExe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
   const script = `
-Start-Process -FilePath ${psQuote(setupExe)} -Verb RunAs -ArgumentList @('--silent','--dir',${psQuote(dir)},'--launch')
+Start-Process -FilePath ${psQuote(setupExe)} -Verb RunAs -ArgumentList @('--silent','--launch')
 `;
   await run('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script]);
+}
+
+function silentTargetDir() {
+  const candidates = [];
+  const fromEnv = String(process.env.ARON_UPDATE_DIR || '').trim();
+  if (fromEnv) candidates.push(fromEnv);
+  const fromArg = String(argValue('--dir') || '').trim();
+  if (fromArg) candidates.push(fromArg);
+  try {
+    const file = path.join(os.tmpdir(), 'aron-update-target.txt');
+    const value = fs.readFileSync(file, 'utf8').trim();
+    if (value) candidates.push(value);
+  } catch { /* файла нет */ }
+
+  // Берём только путь, где уже лежит приложение. Иначе при обновлении
+  // со старой версии кривой --dir (например, "C:\Program") уводит установку.
+  for (const value of candidates) {
+    if (value && fs.existsSync(path.join(value, EXE_NAME))) return value;
+  }
+  return '';
 }
 
 function run(cmd, args, options = {}) {
@@ -371,7 +391,7 @@ app.whenReady().then(async () => {
   trace('app ready');
 
   if (SILENT) {
-    const dir = argValue('--dir') || await installDirForUpdate();
+    const dir = silentTargetDir() || await installDirForUpdate();
     trace(`silent install dir=${dir}`);
     try {
       if (!canWriteDir(dir)) {
